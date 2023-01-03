@@ -2,13 +2,35 @@
 // Ethan Brodsky
 // modified by Camélia SLIMANI
 
+/*
+
+cd /home/hafsa/Documents/@K-MLIO_Analysis/
+scripts/prog_script_cgroup 100
+scripts/prog_script_reset
+clear && gcc -g kmlio.c -o kmlio -lm -D _GNU_SOURCE && ./kmlio generator/CM_5,8M_1000MO_SEP_0,3/points.csv 10 5800000 580000 10
+
+(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM_5,8M_1000MO_SEP_0,3/points.csv 10 5800000 580000 10) & (taskset -c 1 scripts/prog_script_launch))
+
+*/
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <float.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <sys/time.h>
+#include <sys/resource.h>
+#include <fcntl.h>
+
+#ifndef _GNU_SOURCE
+#define	_GNU_SOURCE 1
+#endif
+
+#include <sched.h>
+
 
 #define sqr(x) ((x)*(x))
 
@@ -30,13 +52,20 @@ typedef struct groupe groupe;
 struct index_chunk_elem{
 int  element; 
 struct index_chunk_elem *next;
-}; 
+};
 typedef struct index_chunk_elem index_chunk_elem; 
+
 void fail(char *str)
   {
-    printf(str);
+    printf("%s",str);
     exit(-1);
   }
+
+void save_phase_time(int loop, int phase , int iteration){
+    char *cmd;
+    asprintf(&cmd,"taskset -c 2 ./scripts/prog_script_phase %d %d %u -1",loop,phase,iteration);
+	system(cmd);
+}
   
 double calc_distance(int dim, double *p1, double *p2)
   {
@@ -180,7 +209,6 @@ void update_delta_score_table(int dim, int n, int k, double *X, int *cluster_ass
       }
   }
   
-  
 void  perform_move(int dim, int n, int k, double *X, int *cluster_assignment, double *cluster_centroid, int *cluster_member_count, int move_point, int move_target_cluster)
   {
     int cluster_old = cluster_assignment[move_point];
@@ -220,7 +248,6 @@ void cluster_diag(int dim, int n, int k, double *X, int *cluster_assignment_inde
 	}
 }
   
-
 void copy_assignment_array(int n, int *src, int *tgt)
   {
 	int ii; 
@@ -327,102 +354,7 @@ int   *cluster_assignment_prev = NULL;
 
 //cluster_diag(dim, n, k, X, cluster_assignment_cur, cluster_centroid);
 
-/* THe online update prtion of this code has never worked properly, but batch update has been adequate for our projects so far
-   // ONLINE UPDATE
-    int online_iteration = 0;
-    int last_point_moved = 0;
-    
-    int cluster_changed[MAX_CLUSTERS];
-    for (int ii = 0; ii < k; ii++)
-      cluster_changed[ii] = 1;
-    
-    int cluster_member_count[MAX_CLUSTERS];
-    get_cluster_member_count(n, k, cluster_assignment_cur, cluster_member_count);
-    
-    while (online_iteration < MAX_ITERATIONS)
-      {
-//        printf("online iteration %d \n", online_iteration);
 
-       // for each cluster
-        for (int ii = 0; ii < k; ii++)
-          if (cluster_changed[ii])
-            update_delta_score_table(dim, n, k, X, cluster_assignment_cur, cluster_centroid, cluster_member_count, point_move_score, ii);
-            
-       // pick a point to move
-       // look at points in sequence starting at one after previously moved point
-        int make_move = 0;
-        int point_to_move = -1;
-        int target_cluster = -1;
-        for (int ii = 0; ii < n; ii++)
-          {
-            int point_to_consider = (last_point_moved + 1 + ii) % n;
-              
-           // find the best target for it
-            int best_target_cluster = -1;
-            int best_match_count    = 0;
-            double best_delta        = BIG_double;
-            
-           // for each possible target
-            for (int jj = 0; jj < k; jj++)
-              {
-                double cur_delta = point_move_score[point_to_consider*k + jj];
-
-               // is this the best move so far?
-                if (cur_delta < best_delta)
-                 // yes - record it
-                  {
-                    best_target_cluster = jj;
-                    best_delta = cur_delta;
-                    best_match_count = 1;
-                  }
-                else if (cur_delta == best_delta)
-                 // no, but it's tied with the best one
-                 best_match_count++;
-              }
-
-           // is the best cluster for this point its current cluster?
-            if (best_target_cluster == cluster_assignment_cur[point_to_consider])
-             // yes - don't move this point
-               continue;
-
-           // do we have a unique best move?
-            if (best_match_count > 1)
-             // no - don't move this point (ignore ties)
-              continue;
-            else
-             // yes - we've found a good point to move
-              {
-                point_to_move = point_to_consider;
-                target_cluster = best_target_cluster;
-                make_move = 1;
-                break;
-              }
-          }
-
-        if (make_move)
-          {
-           // where should we move it to?            
-            printf("  %10d: moved %d to %d \n", point_to_move, cluster_assignment_cur[point_to_move], target_cluster);
-
-           // mark which clusters have been modified          
-            for (int ii = 0; ii < k; ii++)
-              cluster_changed[ii] = 0;
-            cluster_changed[cluster_assignment_cur[point_to_move]] = 1;
-            cluster_changed[target_cluster] = 1;
-
-           // perform move
-            perform_move(dim, n, k, X, cluster_assignment_cur, cluster_centroid, cluster_member_count, point_to_move, target_cluster);
-
-           // count an iteration every time we've cycled through all the points
-            if (point_to_move < last_point_moved)
-              online_iteration++;
-
-            last_point_moved = point_to_move;
-          }
-
-      }
-
-*/
       
     printf("iterations: %3d  \n", batch_iteration/*, online_iteration*/);
       
@@ -436,26 +368,27 @@ int   *cluster_assignment_prev = NULL;
     cluster_assignment_prev = NULL;
    // free(point_move_score);
   }           
+
 int *mark(char *source, size_t dim, size_t N, int chunk_size){
-int  * marks= (int *) malloc (sizeof(int)*(N/chunk_size+1));
-char line[100000];
-FILE *src = fopen(source, "r+"); char delim[3]=" "; 
+	int  * marks= (int *) malloc (sizeof(int)*(N/chunk_size+1));
+	char line[100000];
+	FILE *src = fopen(source, "r+"); char delim[3]="\t"; 
 
-char *token; 
-int j = 0, mark_index =1; 
-marks[0] = ftell(src); 
-while (!feof(src)){
-	fgets (line,100000, src); 
-	j=(j+1)%chunk_size; 
-	if (j==0){
-		marks[mark_index]=ftell(src);
-		printf ("marks[%d] = %d\n", mark_index, ftell(src)); 
-		mark_index++; 
+	char *token; 
+	int j = 0, mark_index =1; 
+	marks[0] = ftell(src); 
+	while (!feof(src)){
+		fgets (line,100000, src); 
+		j=(j+1)%chunk_size; 
+		if (j==0){
+			marks[mark_index]=ftell(src);
+			printf ("marks[%d] = %ld\n", mark_index, ftell(src)); 
+			mark_index++; 
+		}
 	}
-}
 
-fclose(src);
-return marks; 
+	fclose(src);
+	return marks; 
 }
 
 double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, int * marks){
@@ -467,7 +400,7 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 
 	X = (double *) malloc(sizeof(double)*sub*dim); 
 	fseek(src, marks[offset/sub], SEEK_CUR); 
-	char delim[3]=" "; 
+	char delim[3]="\t"; 
 	char *token; 
 
 	j=0; 
@@ -480,9 +413,9 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 			token = strtok(NULL, delim);
 		}
 
-	if (sub!=0)
-		if ((j/(dim))==sub)
-			stop=1; 
+		if (sub!=0)
+			if ((j/(dim))==sub)
+				stop=1; 
 	} 
 	fclose(src);
 	//*N=j/(*dim);
@@ -498,29 +431,37 @@ double * random_center_init(double * X, size_t N, size_t dim, size_t k){
 	int *gen =(int *) malloc(sizeof(int)*k); 
 
 	double *c = (double *)malloc (sizeof(double)*(k*dim));
+	//iterate over k cluster
 	while (j<k){
 		r = rand()%N;
+		//if not the first cluster
 		if (j!=0){
+			//search a new point to assign to cluster j
 			new =0; 
 			while(!new ){
 				l = 0; 
 				regen =0; 
+				//find if the randomly chosen point was generated
+				// to past cluster 
 				while(l<j && !regen){
 					if (gen[l]==r)
 						regen =1;
 					l++; 
 				}
+				//if so , reassign a new point to cluster j
 				if (regen)
 					r = rand()%N; 
-	    			else 
+	    		else 
 					new =1; 
 			}
 		} 
+		//asign randomly chosen point r to cluster i center
 		gen[j] = r; 
 		int m; 
 		for ( m=0; m<dim;m++){
 		c[i+m] = X[r*dim+m];
 		}
+		//goto next cluster
 		i=i+dim; 
 		j++;  
 
@@ -541,8 +482,6 @@ double * random_center_init_one(double * X, size_t N, size_t dim){
 	return c; 
 } 
 
-
-
 int token_center(int *centers, int nb, int center){
 	int found=0, i=0; 
 	while (i<nb && !found){
@@ -553,16 +492,17 @@ int token_center(int *centers, int nb, int center){
 	return found; 
 }
 
-
 int find_best_center(double * distance_cur_center, int *centers, size_t N, size_t dim, size_t k, double sum){
 	int best, i; 
 	double max=0;
+	//iterate over points
 	for (i=0; i<N; i++){
+		//if the distance point-center/sumof distance is bigger than max and the current center of the point is not taken
 		if (distance_cur_center[i]/sum>max && !token_center(centers, k,i)){
+			//reassign the best found center and the max distance
 			best = i; 
 			max = distance_cur_center[i]/sum; 
 		}
-
 	}
 	return best; 
 }
@@ -577,7 +517,6 @@ double affect_x(double * X, int *centers_int, int index_x, int k, size_t dim){
 	}
 	return min; 
 } 
-
 
 double * kmeans_init_plusplus(double *X, size_t N, size_t dim, size_t k){
 	double * centers = (double *) malloc (sizeof(double)*k*dim); 
@@ -609,6 +548,7 @@ double * kmeans_init_plusplus(double *X, size_t N, size_t dim, size_t k){
 
 	return centers; 
 }
+
 void dispersion (double * X, size_t dim, size_t N){
 	int i,j; 
 	double *min = malloc(sizeof(size_t)*dim);
@@ -621,7 +561,7 @@ void dispersion (double * X, size_t dim, size_t N){
 	max[i]=X[i];  
 	}
 
-
+	//iterate over point from the second to find the max
 	double d=0; 
 	for (i=dim; i<N; i++){
 	   if (calc_distance (dim, min, X+i*dim) > d){
@@ -684,6 +624,7 @@ double  var_calculate (double * X, int dim, double *  centroids, int center, int
 	}
 	return sse; 
 }
+
 double inter_centroid_distance (int dim, int k, double *  centroids){
 	double sum =0; 
 	int i, j; 
@@ -704,7 +645,6 @@ double *getsubmatrix(double *X, int dim, int offset, int len){
 	return Y; 
 }
 
-
 int existJ (int k, int *tab, int j, int max){
 	int i=0; 
 	while (i<k && tab[i]!=j && i<max){
@@ -715,7 +655,8 @@ int existJ (int k, int *tab, int j, int max){
 	else 
 		return 0; 
 }
-	int maximize(double *partial_means, int * jpris, int pris, int dim, int k, int chunks){
+
+int maximize(double *partial_means, int * jpris, int pris, int dim, int k, int chunks){
 	int i,m, res; 
 	double sum, maxsum;
 	maxsum =0; 
@@ -742,11 +683,12 @@ int existJ (int k, int *tab, int j, int max){
 	return res; 
 }
 
-
 int existG (groupe * groupes, int nb, int g){
 	int found =0, i=0, j; 
+	//iterate over the groupes
 	while (i<nb && !found){
 		j=0; 	
+		//iterate over the chunks of the group
 		while (j<groupes[i].nb && !found){
 			if (groupes[i].means[j]==g){
 				found=1; 
@@ -757,6 +699,7 @@ int existG (groupe * groupes, int nb, int g){
 	}
 	return found; 
 }
+
 int existGi (groupe  groupes, int g){
 	int found =0, j=0; 	
 	while (j<groupes.nb && !found){
@@ -767,6 +710,7 @@ int existGi (groupe  groupes, int g){
 	}
 	return found; 
 }
+
 //version 1: pour séléctionner aléatoirement un groupe parcourir toute la structure cluster_assignement jusqu'à tomber sur le point qui correspond au cluster 
 void form_index ( int *cluster_assignement, int nb_groupes, groupe *grp, size_t N){
 	int i =0, j=0, affected, *index_grp;
@@ -776,10 +720,13 @@ void form_index ( int *cluster_assignement, int nb_groupes, groupe *grp, size_t 
 	    index_grp[i]= 0; 
 	}
 
+	//iterate over points
 	for (i=0; i< N; i++){
 		affected = 0; 
 		j =0;
+		// affect the point to a group
 		while (!affected && j<nb_groupes){
+			//if the point cluster is exist in the group j
 			if (existGi (grp[j], cluster_assignement[i])){
 				grp[j].members[index_grp[j]]=i; 
 				index_grp[j]++; 
@@ -792,8 +739,7 @@ void form_index ( int *cluster_assignement, int nb_groupes, groupe *grp, size_t 
 	free(index_grp); 
 } 
 
-
-	double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int * cluster_assignment, int nb_groupes, size_t N, size_t dim, size_t taille){
+double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int * cluster_assignment, int nb_groupes, size_t N, size_t dim, size_t taille){
 	double * chunk =(double *) malloc (sizeof(double )*(dim*taille)); 
 	int nb_samples; 
 	int j, index_groupe, l, size =0,i, found, m, *int_chunk; 
@@ -808,19 +754,25 @@ void form_index ( int *cluster_assignement, int nb_groupes, groupe *grp, size_t 
 	index[i].next = NULL;
 	cur[i]=NULL;
 	}
+	//form groups index
 	form_index (cluster_assignment, nb_groupes, grp,  N); 
+	//form chunk
 	while(size < taille){
+	//iterate over groups
 	for ( i=0; i<nb_groupes; i++){
-			
+			//get the elements ratio that can be in chunk for the group
 				c = (float)grp[i].nb_members /(float) N * taille;
 				nb_samples = (int)c; 
 				j = 0; 
+				//choose the elements in the chunk randomly
 				for (j=0; j<nb_samples;j++){
 				
 				tmp = rand()%grp[i].nb_members;
 				
 				if (size==taille) 
 						break;
+				//if the slected point from the group does not exist
+				//in the index , add it
 				if (index[grp[i].members[tmp]/taille].element == -1){
 					index[grp[i].members[tmp]/taille].element=grp[i].members[tmp]%taille; 
 				}
@@ -847,89 +799,93 @@ void form_index ( int *cluster_assignement, int nb_groupes, groupe *grp, size_t 
 	}
 	}
 	size=0; 
+	//iterate over chunk points
 	for (i=0; i<N/taille;i++){
-	if (index[i].element!=-1){
-	Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
-	//printf ("chunk %d\n", i); 
-	for (j=0; j<dim;j++){
-	chunk[size*dim+j] = Y[index[i].element*dim+j]; 
-	//printf("%lf\n", Y[index[i].element*dim+j]);
-	}
-	size++; 
-	cur [i]= index[i].next; 	
-	while(cur[i]!=NULL){
-		//printf("ELEMENT %ld\n", cur[i]->element);
-		for (j=0; j<dim;j++){
-			chunk[size*dim+j] = Y[cur[i]->element*dim+j]; 
+		if (index[i].element!=-1){
+			Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
+			//printf ("chunk %d\n", i); 
+			for (j=0; j<dim;j++){
+				chunk[size*dim+j] = Y[index[i].element*dim+j]; 
+				//printf("%lf\n", Y[index[i].element*dim+j]);
+			}
+			size++; 
+			//goto next point in index
+			cur [i]= index[i].next; 	
+			while(cur[i]!=NULL){
+				//printf("ELEMENT %ld\n", cur[i]->element);
+				for (j=0; j<dim;j++){
+					chunk[size*dim+j] = Y[cur[i]->element*dim+j]; 
+				}
+				cur[i]=cur[i]->next; 
+				size++; 
+			}
+			free(cur[i]);
+			free(Y);
 		}
-		cur[i]=cur[i]->next; 
-		size++; 
-	}
-	free(cur[i]);
-	free(Y);
-	}
 	}
 	printf ("size %d\n", size);
 	return chunk; 
 }
 
 void sort_centroid(size_t dim, size_t k, double * centroid){
-int i, j, l, index=0; 
-double *tmp = (double *) malloc (sizeof(double)*k*dim); 
+	int i, j, l, index=0; 
+	double *tmp = (double *) malloc (sizeof(double)*k*dim); 
 
-for (i =0; i< k; i++){
-for (j=0; j< dim; j++){
-tmp[j] = 0; 
-}
-	for (j=i;j<k; j++){
-		if (tmp[0]<centroid[dim*j]){
-			for (l=0; l< dim; l++){
-				tmp[l] = centroid[j*dim+l];
-				index = j;  
-			}	
+	//iterate over clusters
+	for (i =0; i< k; i++){
+		//initialize
+		for (j=0; j< dim; j++){
+			tmp[j] = 0; 
 		}
-	
-	}
-	for (l=0; l< dim; l++){
-		centroid[index*dim+l] = centroid[i*dim+l]; 
-		centroid[i*dim+l] = tmp[l];  
+		//iterate over next clusters
+		for (j=i;j<k; j++){
+			if (tmp[0]<centroid[dim*j]){
+				for (l=0; l< dim; l++){
+					tmp[l] = centroid[j*dim+l];
+					index = j;  
+				}	
+			}
+		}
+		//iterate over dimensions and swap the centers
+		for (l=0; l< dim; l++){
+			centroid[index*dim+l] = centroid[i*dim+l]; 
+			centroid[i*dim+l] = tmp[l];  
+		}
 	}
 
-}
-
-free(tmp); 
+	free(tmp); 
 }
 
 void compare_solution ( double * centroid, char * solution_file_name, size_t dim, size_t k){
 
-FILE *solution = fopen (solution_file_name, "r+"); 
-char *token; 
-char tmp[1000000]; 
-char delim[3] = " \n"; 
-double * centroid_solution = (double *) malloc (sizeof(double) *k*dim);
-int index=0, index2;  
-double delta=0; 
-while(!feof(solution)){
-	fgets (tmp, 1000000, solution); 
-	token = strtok(tmp, delim); 
-	while (token != NULL){
-		centroid_solution[index] = atof(token); 
-		index++;
-		token = strtok(NULL, delim); 	
+	FILE *solution = fopen (solution_file_name, "r+"); 
+	char *token; 
+	char tmp[1000000]; 
+	char delim[3] = "\n"; 
+	double * centroid_solution = (double *) malloc (sizeof(double) *k*dim);
+	int index=0, index2;  
+	double delta=0; 
+	while(!feof(solution)){
+		fgets (tmp, 1000000, solution); 
+		token = strtok(tmp, delim); 
+		while (token != NULL){
+			centroid_solution[index] = atof(token); 
+			index++;
+			token = strtok(NULL, delim); 	
+		}
 	}
-}
-fclose(solution); 
-for (index = 0; index<k; index++){
-	printf ("centres %d\n", index); 
-	for (index2=0; index2<dim; index2++){
-	 printf ("sol: %lf  sol obt : %lf\n", centroid_solution[index*dim+index2], centroid[index*dim+index2]); 
+	fclose(solution); 
+	for (index = 0; index<k; index++){
+		printf ("centres %d\n", index); 
+		for (index2=0; index2<dim; index2++){
+		printf ("sol: %lf  sol obt : %lf\n", centroid_solution[index*dim+index2], centroid[index*dim+index2]); 
+		}
+		
+		delta +=calc_distance(dim,&centroid_solution[index*dim], &centroid[index*dim]);  	
 	}
-	
-	delta +=calc_distance(dim,&centroid_solution[index*dim], &centroid[index*dim]);  	
-}
-printf ("delta solution_type solution obtenue : %lf\n", sqrt(delta)); 
+	printf ("delta solution_type solution obtenue : %lf\n", sqrt(delta)); 
 
-free(centroid_solution); 
+	free(centroid_solution); 
 }
 
 void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int N, int k){
@@ -943,83 +899,101 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 	struct timeval tv_begin, tv_end;
 	groupe *groupes=NULL; 
 	size_t tot; 
-	int *marks = mark(source, dim, N, taille); 
-	//appliquer le kmeans sur chaque chunk 
+
+	/****** PHASE 1 : PARTIELS CHUNKS KMEANS ******/
+
+	//mark the chunks in dataset
+	save_phase_time(1,1,0);
+	int *marks = mark(source, dim, N, taille);
+	save_phase_time(1,1,1);
+	//apply kmeans on each chunk
 	if (N/taille >1){
+		save_phase_time(1,2,0);
+
 		cluster_assignment_final=  (int *) malloc(N*sizeof(int));
 		cluster_centroid_by_chunk = (double *)malloc(sizeof(double)*(k*dim*N/taille)); 
 		var = (double *) malloc (sizeof(double)*k*N/taille); 
 		groupes = (groupe * ) malloc (sizeof(groupe )*N/taille*k); 
+
 		for( m = 0; m<N/taille; m++){
 			printf ("chunk %d/%d\n", m, N/taille); 
 			i = m*taille;
 			//lecture du chunk 
 			Y = getmatrix(source, dim, taille,taille,i, marks); 
-			printf ("unmap error"); 
-			//Y= getsubmatrix(X, dim,i, taille);
-			//initialisation aléatoire des centres pour ce chunk  
-			//cluster_centroid = random_center_init(Y, taille, dim, k);
-			
-			gettimeofday(&tv_begin, NULL); 	
+			//chunk m init kmeans++ 
 			cluster_centroid =kmeans_init_plusplus(Y, taille, dim, k);
-			gettimeofday(&tv_end, NULL); 
-			printf ("init time: %lf\n", (float)(tv_end.tv_sec - tv_begin.tv_sec)/60);
+			//apply kmeans on the chunk m
 			cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
-			//printf ("chunk %d\n", m); 
 			kmeans(dim,Y,taille, k, cluster_centroid, cluster_assignment_final_Y);
-			
+			//variance calculation on the chunk m
 			for ( j=0; j<k;j++){
 				var[m*k+j] = var_calculate (Y, dim, cluster_centroid, j, cluster_assignment_final_Y , taille)/taille; 
 			}
+			//copy the centroids to global array
 			for ( j=0; j<k*dim;j++){
 				cluster_centroid_by_chunk[m*k*dim+j] = cluster_centroid[j];   
 			}
-			for ( n=0 ; n<taille; n++){		cluster_assignment_final[m*taille+n]=cluster_assignment_final_Y[n]+m*k; 
+			//copy points clustering to global array
+			for ( n=0 ; n<taille; n++){		
+				cluster_assignment_final[m*taille+n]=cluster_assignment_final_Y[n]+m*k; 
 			}
+
 			free(Y);
 			Y = NULL;
 			free(cluster_centroid); 
 			cluster_centroid=NULL; 
 			free(cluster_assignment_final_Y); 
 			cluster_assignment_final_Y=NULL; 
+
+			save_phase_time(1,2,m+1);
 		}
+
+		/****** PHASE 2 : PARTIELS CLUSTERS GROUPING ******/
+		save_phase_time(2,1,0);
 		nb_groupes =0; 
 		for (j=0; j< k*N/taille; j++){
 			if (!existG(groupes, nb_groupes, j)){
-			groupes[nb_groupes].means = (int*) malloc(sizeof(int)); 
-			groupes[nb_groupes].nb =1; 		
-			groupes[nb_groupes].means[0]=j; 
-			for ( n = j+1; n<k*N/taille; n++){
-				//condition de non existence
-				if (calc_distance(dim, &cluster_centroid_by_chunk[j*dim], &cluster_centroid_by_chunk[n*dim])<var[j] && !existG(groupes, nb_groupes, n)){
-					groupes[nb_groupes].means = (int *) realloc (groupes[nb_groupes].means, (groupes[nb_groupes].nb+1)*sizeof(int));  	
-					groupes[nb_groupes].means[groupes[nb_groupes].nb] = n; 
-					//printf ("next\n");
-					groupes[nb_groupes].nb++; 
+				groupes[nb_groupes].means = (int*) malloc(sizeof(int)); 
+				groupes[nb_groupes].nb =1; 		
+				groupes[nb_groupes].means[0]=j; 
+				for ( n = j+1; n<k*N/taille; n++){
+					//condition de non existence
+					if (calc_distance(dim, &cluster_centroid_by_chunk[j*dim], &cluster_centroid_by_chunk[n*dim])<var[j] && !existG(groupes, nb_groupes, n)){
+						groupes[nb_groupes].means = (int *) realloc (groupes[nb_groupes].means, (groupes[nb_groupes].nb+1)*sizeof(int));  	
+						groupes[nb_groupes].means[groupes[nb_groupes].nb] = n; 
+						//printf ("next\n");
+						groupes[nb_groupes].nb++; 
 					
+					}
 				}
+				nb_groupes++; 
 			}
-			nb_groupes++; 
-			}
+			save_phase_time(2,1,j+1);
 		}
-		printf ("group number %d\n", nb_groupes);
+
+		printf ("groups number %d\n", nb_groupes);
 		free(cluster_centroid_by_chunk); 
 		cluster_centroid_by_chunk = NULL;
+		
+		save_phase_time(2,2,0);
+		//groups members count update
 		float count = k*N/taille; 
-
 		get_cluster_member_count(((int) (N/taille)) * taille, (int) count, cluster_assignment_final, cluster_member_count);
 
 		for (j=0; j<nb_groupes; j++){
 			groupes[j].nb_members = 0; 
 			for (n = 0; n< groupes[j].nb; n++){
-			groupes[j].nb_members+=cluster_member_count[groupes[j].means[n]]; 
-		}
+				groupes[j].nb_members+=cluster_member_count[groupes[j].means[n]]; 
+			}
 		}
 
+		save_phase_time(2,2,1);
+
+		/****** PHASE 3 : FINAL CHUNK BUILDING ******/
+		save_phase_time(3,1,0);
 		double * chunk; 
-		//X = getmatrix(source, dim, N,N,0, marks ); 
-
-		chunk = form_chunk(groupes, /*X*/ source, marks,cluster_assignment_final, nb_groupes, N, dim, taille); 
+		chunk = form_chunk(groupes,source, marks,cluster_assignment_final, nb_groupes, N, dim, taille); 
+		save_phase_time(3,1,1);
 
 		free(cluster_assignment_final); 
 		cluster_assignment_final =NULL; 
@@ -1029,18 +1003,18 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		}
 		free(groupes); 
 		groupes = NULL;
-		//printf ("cluster representatif formé\n"); 
-		//cluster_centroid = random_center_init(chunk, taille, dim, k);
-
-		gettimeofday(&tv_begin, NULL);
-		cluster_centroid =kmeans_init_plusplus(chunk, taille, dim, k);
-		gettimeofday(&tv_end, NULL);
-		printf ("init time: %lf\n", (float)(tv_end.tv_sec - tv_begin.tv_sec)/60);
 		
-		//printf ("centres initialisés\n");
+		/****** PHASE 4 : FINAL CHUNK KMEANS ******/
 
+		save_phase_time(4,1,0);
+		cluster_centroid =kmeans_init_plusplus(chunk, taille, dim, k);
+		save_phase_time(4,1,1);
+		
+		save_phase_time(4,2,0);
 		cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
 		kmeans(dim,chunk,taille, k, cluster_centroid, cluster_assignment_final_Y);
+		save_phase_time(4,2,1);
+
 		//sort_centroid (dim, k, cluster_centroid);
 		cluster_diag(dim, taille, k, chunk, cluster_assignment_final_Y, cluster_centroid);
 		free(chunk);
@@ -1051,9 +1025,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		X = getmatrix(source, dim, N,N,0, marks );
 		printf ("initialisation des centres\n"); 
 
-		gettimeofday(&tv_begin, NULL);
 		cluster_centroid =kmeans_init_plusplus(X, N, dim, k);
-		gettimeofday(&tv_end, NULL);
 		printf ("init time: %lf\n", (float)(tv_end.tv_sec - tv_begin.tv_sec)/60);
 		//cluster_centroid = random_center_init(X, N, dim, k);
 			
@@ -1075,6 +1047,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 	free(cluster_centroid); 	
 	cluster_centroid =NULL;
 }
+
 void kmeans_kmeans(double * X,int dim, int taille, int N, int k){ //expérimentation de la méthode de kmeans de kmeans sans formation de chunk représentatif
 	int i, * cluster_assignment_final, *cluster_assignment_final_Y, m, j, n; 
 	double * Y; 
@@ -1114,35 +1087,59 @@ void kmeans_kmeans(double * X,int dim, int taille, int N, int k){ //expérimenta
 
 }
 
+
+void save_kmeans_iterations(int loop, int phase , int iteration, int swap){
+    char *cmd;
+    asprintf(&cmd,"taskset -c 2 ./scripts/prog_script_phase %d %d %u %d",loop,phase,iteration,swap);
+	system(cmd);
+}
+
 int main (int argc, char **argv){
+
+	cpu_set_t set;
+	// clear cpu mask
+	CPU_ZERO(&set);
+	// set cpu 0
+	CPU_SET(0, &set);
+	// 0 is the calling process
+	sched_setaffinity(0, sizeof(cpu_set_t), &set);
+	//set priority
+	setpriority(PRIO_PROCESS, 0, -20);
+
 	clock_t begin, end; 
 	int i,j; 
 	size_t  tot;
-	char cmd[200];  
-	sprintf (cmd, "echo %d > /cgroups/mem/kmeans/tasks", getpid()); 
-	printf ("%s\n", cmd);
-	system(cmd); 
-	sleep(1);
-	char * source = argv[1]; 
-	size_t k = atoi(argv[2]);
 	int taille_chunk, taille; 
 	size_t dim, N; 
 	double *X;
-	struct timeval tv_begin, tv_end;
+
+	char cmd[200];  
+	sprintf (cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	printf ("%s\n", cmd);
+	system(cmd); 
+	sleep(1);
+	
+	char * source = argv[1]; 
+	size_t k = atoi(argv[2]);
 	N = atoi(argv[3]); 
 	taille = atoi(argv[4]);
 	dim = atoi(argv[5]); 
 	taille_chunk = taille; 
 	srand(time(NULL));
-	//X= getmatrix(source, &dim, &tot,NULL,0 ); 
 	//begin = clock();  
+
+	struct timeval tv_begin, tv_end;
 	gettimeofday(&tv_begin, NULL); 
 	kmeans_by_chunk( source, dim, taille, N, atoi(argv[2])); 
+	//X= getmatrix(source,dim,N,0,0,NULL) ; 
+	//kmeans_kmeans( X, dim, taille,N, atoi(argv[2])); 
 	gettimeofday(&tv_end, NULL); 
 
-	//kmeans_kmeans( X, dim, taille, tot, atoi(argv[2])); 
-
 	//end = clock(); 
-	printf ("%lf\n", (float)(tv_end.tv_sec - tv_begin.tv_sec)/60);
+	printf ("KMEANS TIME = %lf min\n", (float)(tv_end.tv_sec - tv_begin.tv_sec)/60);
+	
+	system("pkill watch");
+	system("killall -9 prog_script_cpu_io");
+	
 	return 0;
 }

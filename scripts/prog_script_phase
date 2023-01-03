@@ -1,0 +1,14 @@
+#!/bin/bash
+
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+#cd "$parent_path"
+
+(
+    (
+        date +%s%3N ;
+        echo $1 ;
+        echo $2 ;
+        echo $3 ;
+        echo 2900000 ;
+    ) | xargs | sed 's/ /,/g'
+) | tee -a $parent_path/../logs/log_phase.csv 

@@ -1,0 +1,20 @@
+K-MLIO :
+phase 1 :
+    mark chunks
+    on each chunk:
+        charge chunk
+        kmeans++ init 
+        apply kmeans
+        var calculation
+        copy results
+
+phase 2 :
+    form the groupes
+    update groups members count
+
+phase 3 :
+    form final chunk
+
+phase 4 :
+    kmeans++ init on final chunk
+    apply kmeans on final chunk

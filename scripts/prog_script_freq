@@ -1,0 +1,11 @@
+#!/bin/bash
+
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+
+(
+    ( 
+        date +%s%3N ;
+        echo "*,*,*" ;
+        cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+    ) | xargs | sed 's/ /,/g'
+) | tee -a $parent_path/../logs/log_frequency.csv > /dev/null
