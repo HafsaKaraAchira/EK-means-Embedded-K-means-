@@ -9,6 +9,7 @@ parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
         echo $1 ;
         echo $2 ;
         echo $3 ;
+        echo $4 ;
         echo 2900000 ;
     ) | xargs | sed 's/ /,/g'
 ) | tee -a $parent_path/../logs/log_phase.csv 

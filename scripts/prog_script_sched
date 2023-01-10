@@ -1,0 +1,12 @@
+#!/bin/bash
+
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+
+(
+    ( 
+        date +%s%3N ;
+        cat /proc/$(pidof program)/sched | grep "se.avg.util_avg" | sed 's/^.*: *//' ;
+        cat /proc/$(pidof program)/sched | grep "se.avg.load_avg" | sed 's/^.*: *//' 
+    ) | xargs | sed 's/ /,/g'
+) | tee -a $parent_path/../logs/log_sched.csv > /dev/null
+
