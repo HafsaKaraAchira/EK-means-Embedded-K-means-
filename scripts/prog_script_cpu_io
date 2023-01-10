@@ -2,29 +2,15 @@
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
-while true
+while ! pgrep -x "htop" > /dev/null ; do : ; done
+
+while :
 do
     (
         ( 
-            date +%s%3N ;
-            echo "*,*,*,*" ;
-            #cpu="*" ;
-            #cpu=$(
-            top -1 -b -n2 -p $(pgrep -d',' program) | tail -1 | awk '{print 0.0+$9}' ;
-            #,"$13} ;
-            #)
-            #if [[ $cpu =~ '^[0-9]+([.][0-9]+)?$' ]] ; then
-            #    echo $cpu
-            #else
-            #    echo "*"
-            #fi
-            ps -C program -o "maj_flt" |tail -1 | awk '{print 0.0+$1}' ;
-            iotop -n2 -qqq -t -k -p $(pgrep -d',' program) | tail -1 | awk '{print $5+$7}';
-            #pidstat 1 2 -ud -h -G program|tail -1|awk '{print $11+$12}'
-        ) | xargs | sed 's/ /,/g'
-    ) | tee -a $parent_path/../logs/log_cpu_io.csv > /dev/null
-    
-    #pidstat 1 2 -ud -h -G htop | tail -2 |awk '{print $9","$11","$12}'
-
-    #sar areq-sz
+            date +%s%3N ; 
+            echo "*,*,*,*,*" ;
+            top -b -1 -n 2 -p $(pgrep -d',' program) -e k -E k | tail -1 | awk '{print $6,$9,$10}';
+        )
+    ) | xargs | sed 's/ /,/g' | tee -a $parent_path/../logs/log_cpu_io.csv > /dev/null
 done

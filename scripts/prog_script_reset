@@ -6,7 +6,9 @@ killall -9 prog_script_cpu_io ;
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
-echo "\"AbsoluteTime\",\"Phase\",\"Step\",\"Iteration\",\"Frequency\",\"CPU_Usage\",\"Nb_pflts\",\"IO_kbps\"" | tee $parent_path/../logs/log_frequency.csv $parent_path/../logs/log_phase.csv $parent_path/../logs/log_cpu_io.csv > /dev/null ;
+echo "\"AbsoluteTime\",\"Phase\",\"Step\",\"Loop\",\"Iteration\",\"Frequency\",\"CPU_Usage\",\"SWAP\",\"Nb_pflts\"" | tee $parent_path/../logs/log_frequency.csv $parent_path/../logs/log_phase.csv $parent_path/../logs/log_cpu_io.csv > /dev/null ;
+
+true > $parent_path/../logs/log_sched.csv ;
 
 true > $parent_path/../logs/result_merge.csv ;
 true > $parent_path/../logs/temp_merge.csv ;

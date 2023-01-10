@@ -3,17 +3,17 @@ library(magrittr) # needs to be run every time you start R and want to use %>%
 library(dplyr) # alternatively, this also loads %>%
 library(mclust)
 
-folder <- "generator/CM2_M2,8_500MO_SEP0,1/"
+folder <- "generator/CM5,8M_1000MO_SEP0,3/"
 
-ari_classes <- read.table(paste(folder,"datapoints_1.mem",sep=""),header = FALSE,sep = "\t",stringsAsFactors = FALSE)
+# ari_classes <- read.table(paste(folder,"datapoints_1.mem",sep=""),header = FALSE,sep = "\t",stringsAsFactors = FALSE)
 
-ari_clusters <- read.table("./results/clusters.csv", header = FALSE,  sep = "\t", stringsAsFactors = FALSE)
+# ari_clusters <- read.table("./results/clusters.csv", header = FALSE,  sep = "\t", stringsAsFactors = FALSE)
 
-mc_ari <- adjustedRandIndex(ari_clusters$V1, ari_classes$V1)
-print(mc_ari)
-
-ari_ct <- table(ari_classes$V1, ari_clusters$V1)
-print(ari_ct)
+# mc_ari <- adjustedRandIndex(ari_clusters$V1, ari_classes$V1)
+# print(mc_ari)
+mc_ari <- -1
+# ari_ct <- table(ari_classes$V1, ari_clusters$V1)
+# print(ari_ct)
 
 #############################################
 #             clusters centers

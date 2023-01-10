@@ -1,5 +1,7 @@
 #!/bin/bash
 
 mkdir /sys/fs/cgroup/memory/kmeans
-
 echo $(($1 * 1024 * 1024)) > /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes
+cat /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes
+
+# 
