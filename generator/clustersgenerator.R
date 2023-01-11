@@ -3,6 +3,9 @@ if(!require("clusterGeneration")) { # nolint
     library("clusterGeneration")
 }
 
+# library("data.table")
+library("readr")
+
 size <- 1000 # dataset size in MB
 
 K <- 10 # clusters
@@ -11,32 +14,39 @@ D <- 10 # dimension
 
 ligne_avg_bytes <- D * 17 + (D-1)
 
-folder <- "generator/CM5,8M_1000MO_SEP0,3/" 
+folder <- "generator/CM13,4M_2400MO_SEP0,2/"
 
-# "generator/CM4_5,8M_1000MO/"
-
-c <- 580000 #( signif(size / ligne_avg_bytes , digits = 2) * 1000000 ) / K   # 580000
+c <- 1342180 #( signif(size / ligne_avg_bytes , digits = 2) * 1000000 ) / K   # 580000
 
 print(c)
 
 minmax_scaler <- function(x) {(x - min(x)) / (max(x) - min(x))}
 
-# tmp1 <- genRandomClust(
-#                numClust = K,
-#                sepVal = 0.3,
-#                numNonNoisy = D,
-#                clustszind = 1,
-#                clustSizeEq = c, 
-#                numReplicate = 1,
-#                fileName = paste(folder, "datapoints", sep = "")
-#                 )
+tmp1 <- genRandomClust(
+               numClust = K,
+               sepVal = 0.2,
+               numNonNoisy = D,
+               clustszind = 1,
+               clustSizeEq = c, 
+               numReplicate = 1,
+               fileName = paste(folder, "datapoints", sep = "")
+            )
 
-data <- read.delim(paste(folder,"datapoints_1.dat",sep=""), header=TRUE,sep = " ",as.is=TRUE)
+print("data generated done")
 
-# data_norm <- minmax_scaler(data)
+data <- read_delim(paste(folder, "datapoints_1.dat", sep = "")," ",col_names= TRUE)
 
-# write.table(data_norm,paste(folder,"points.csv",sep=""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
+# data <- read.delim(paste(folder, "datapoints_1.dat", sep = ""), header=TRUE,sep = " ",as.is=TRUE)
 
+print("data read done")
+
+data_norm <- minmax_scaler(data)
+
+print("data norm done")
+
+write.table(data_norm,paste(folder, "points.csv", sep = ""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
+
+print("data norm write done")
 
 # clusters <- read.table(paste(folder,"datapoints_1.mem",sep=""), header = FALSE,  sep = "\t",  stringsAsFactors = FALSE)
 # head(clusters)
@@ -45,15 +55,15 @@ data <- read.delim(paste(folder,"datapoints_1.dat",sep=""), header=TRUE,sep = " 
 #################################
 #################################
 
-data_min <- min(data)
-data_max <- max(data)
+# data_min <- min(data)
+# data_max <- max(data)
 
-word <- readline(prompt="Enter a key (extract the mean vectors before): ")
-print(word)
+# word <- readline(prompt="Enter a key (extract the mean vectors before): ")
+# print(word)
 
-original_centres <- read.table(paste(folder,"original_centres.csv",sep=""),header = FALSE,sep = " ",stringsAsFactors = FALSE)
-original_centres_norm <- (original_centres - data_min) / (data_max - data_min)
-write.table(original_centres_norm,paste(folder,"original_centres_norm.csv",sep=""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
+# original_centres <- read.table(paste(folder,"original_centres.csv",sep=""),header = FALSE,sep = " ",stringsAsFactors = FALSE)
+# original_centres_norm <- (original_centres - data_min) / (data_max - data_min)
+# write.table(original_centres_norm,paste(folder,"original_centres_norm.csv",sep=""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
 
 #################################
 #################################

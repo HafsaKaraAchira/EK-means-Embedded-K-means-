@@ -537,7 +537,7 @@ int *mark(char *source, size_t dim, size_t N, int chunk_size){
 }
 
 double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, int * marks){
-	FILE *src = fopen(source, "r+"); 
+	FILE *src = fopen(source, "r"); 
 	char line[100000]; 
 	double *X=NULL;
 	size_t i =0, j=0; 
@@ -549,6 +549,16 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 	char *token; 
 
 	j=0; 
+
+	// char *line = NULL;
+	// ssize_t len;
+    // ssize_t read;
+	// (read = getline(&line, &len, fp)) != -1
+	// for(int i = 0 ; i<dim ; i++){
+		// 	fscanf(src,"%lf\t",&X[j]);	//%[^\n]
+		// }
+		//token = {"0.585892555269932","0.423707833870107","0.319247551400019","0.48577704408605","0.527776968745389","0.593186599190845","0.589352448845588","0.490654428777696","0.646799393886685","0.579247317808938"} ;
+
 	while (!feof(src) && !stop){
 		fgets (line,100000, src); 
 		token = strtok(line, delim);
@@ -563,6 +573,7 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 				stop=1; 
 	} 
 	fclose(src);
+
 	//*N=j/(*dim);
 	//*d = *dim; 
 	//free(dim);
@@ -1012,8 +1023,6 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 	groupe *groupes=NULL; 
 	// double* X; 
 	
-	
-
 	/****** PHASE 1 : PARTIELS CHUNKS KMEANS ******/
 
 	//mark the chunks in dataset
@@ -1031,6 +1040,9 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 			i = m*taille;
 			Y = getmatrix(source, dim, taille,taille,i, marks); 
 			save_phase_time(1,2,(m+1),1);	//get matrix
+			
+			//sleep(30) ;
+			
 			//chunk m init kmeans++ 
 			cluster_centroid =kmeans_init_plusplus(Y, taille, dim, k);
 			//cluster_centroid =getmatrix("results/chunks_center_4.csv", dim, taille,k,i*k, marks); 
