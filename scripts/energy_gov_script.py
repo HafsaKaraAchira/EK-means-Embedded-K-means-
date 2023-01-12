@@ -21,7 +21,7 @@ dim = 10
 
 #@measure_energy(handler=csv_handler, domains=[RaplCoreDomain(0),RaplDramDomain(0)])
 def program_call(M):
-    os.system("./program "+file+" "+str(k)+" "+str(N)+" "+str(int(N/M))+" "+str(dim))
+    os.system("./prog_kmlio_energy "+file+" "+str(k)+" "+str(N)+" "+str(int(N/M))+" "+str(dim))
 
 affinity_mask = {1}
 pid = 0
@@ -50,17 +50,17 @@ def prog_memory_est(N,dim,k,MC) :
 for MC in reversed(memory_constraint) :
     # $1 is the governor name
     S=prog_memory_est(N,dim,k,MC)
-    # os.system("echo $(( "+str(int(S))+" * 1024 * 1024)) > /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes")
+    os.system("echo $(( "+str(int(S))+" * 1024 * 1024)) > /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes")
     print(str(MC)+"  "+str(int(1024/MC))+"    "+str(S))
-    # for governor in governors :
-    #     os.system("echo "+governor+" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
-    #     os.system("./scripts/prog_script_cache")
-    #     time.sleep(30)
-    #     with EnergyContext(handler=csv_handler, domains=[RaplCoreDomain(0),RaplDramDomain(0)], start_tag=str(MC)+","+governor) as ctx:
-    #         # call the target program
-    #         program_call(MC)
+    for governor in governors :
+        os.system("echo "+governor+" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
+        os.system("./scripts/prog_script_cache")
+        time.sleep(30)
+        with EnergyContext(handler=csv_handler, domains=[RaplCoreDomain(0),RaplDramDomain(0)], start_tag=str(MC)+","+governor) as ctx:
+            # call the target program
+            program_call(MC)
 
 
-#csv_handler.save_data()
+csv_handler.save_data()
 
 #################################################################
