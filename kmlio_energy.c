@@ -1276,7 +1276,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		// save_phase_time(2,2,0,0);
 		cluster_centroid =kmeans_init_plusplus(X, N, dim, k);
 		char *cluster_centroid_file;
-    	asprintf(&cluster_centroid_file,"results/1024MC_centers/chunks_centers_1.csv",(N/taille));
+    	asprintf(&cluster_centroid_file,"results/1024MC_centers/chunks_centers_%d.csv",(N/taille));
 		int *chunks_marks = mark(cluster_centroid_file, dim, k, k);
 		cluster_centroid = getmatrix(cluster_centroid_file,dim,k,k,0,chunks_marks) ;
 		//r8mat_write ("results/chunks_centers.csv",dim,k,cluster_centroid) ;
@@ -1387,8 +1387,6 @@ int main (int argc, char **argv){
 	//end = clock(); 
 	//printf ("KMEANS TIME = %lf min\n", (float)(tv_end.tv_sec - tv_begin.tv_sec)/60);
 	
-	system("pkill watch");
-	system("killall -9 prog_script_cpu_io");
 	
 	return 0;
 }
