@@ -37,10 +37,10 @@ def prog_memory_est(N,dim,k,MC) :
     chunk_size = M * dim * double_size
     dist_mat_size = M * k * double_size
     kmeans_assign_size = 2 * M *int_size
-    # chunk_assign_size = M * int_size
+    chunk_assign_size = M * int_size
     # dataset_assign_size = N * int_size
     
-    size = chunk_size+dist_mat_size+kmeans_assign_size #+chunk_assign_size
+    size = chunk_size+dist_mat_size+kmeans_assign_size+chunk_assign_size
     size = math.ceil(( (size) / (1024**2)) + 1.5 ) +1
     
     return size
