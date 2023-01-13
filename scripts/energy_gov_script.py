@@ -27,8 +27,8 @@ affinity_mask = {1}
 pid = 0
 os.sched_setaffinity(0, affinity_mask)
 
-governors = ["ondemand","performance","conservative","schedutil"] #,"powersave"]
-memory_constraint = [1,2,4,5,8,10]
+governors = ["performance"]#["ondemand","performance","conservative","schedutil"] #,"powersave"]
+memory_constraint = [4] #[1,2,4,5,8,10]
 
 def prog_memory_est(N,dim,k,MC) :
     double_size = 8
