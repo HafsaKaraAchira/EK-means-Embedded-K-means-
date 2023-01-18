@@ -40,6 +40,7 @@ clear && gcc -g kmlio.c -o kmlio -lm -D _GNU_SOURCE && ./kmlio generator/CM_5,8M
 
 #define BIG_double (INFINITY)
 
+int chunk_index = 1 ;
 
 struct groupe{
 int * means; 
@@ -649,6 +650,7 @@ int *mark(char *source, size_t dim, size_t N, int chunk_size){
 	return marks; 
 }
 
+
 double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, int * marks){
 	FILE *src = fopen(source, "r"); 
 	char line[100000]; 
@@ -662,16 +664,6 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 	char *token; 
 
 	j=0; 
-
-	// char *line = NULL;
-	// ssize_t len;
-    // ssize_t read;
-	// (read = getline(&line, &len, fp)) != -1
-	// for(int i = 0 ; i<dim ; i++){
-		// 	fscanf(src,"%lf\t",&X[j]);	//%[^\n]
-		// }
-		//token = {"0.585892555269932","0.423707833870107","0.319247551400019","0.48577704408605","0.527776968745389","0.593186599190845","0.589352448845588","0.490654428777696","0.646799393886685","0.579247317808938"} ;
-
 	while (!feof(src) && !stop){
 		fgets (line,100000, src); 
 		token = strtok(line, delim);
@@ -687,10 +679,86 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 	} 
 	fclose(src);
 
-	//*N=j/(*dim);
-	//*d = *dim; 
-	//free(dim);
-	//dim = NULL;
+	return X; 
+}
+
+
+
+double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, int offset, int * marks){
+	
+	FILE *src = fopen(source, "r"); 
+	double *X=NULL;
+	size_t i =0, j=0; 
+	int stop=0; 
+	
+	//decide best buffer size
+	int MAX_DOUBLE_LEN = 24 ;
+	int MAX_LINE_SIZE = (MAX_DOUBLE_LEN+1) * dim ;
+	char line[MAX_LINE_SIZE]; 
+	
+	// calculate the rest size allowed for the chunk kmeans
+	int kmeans_size = (sizeof(double)*k + 2*sizeof(int) + sizeof(int))*sub ;
+	// the size of chunk data in file
+	int chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
+	// the average size of chunk line in file
+	int avg_line_size = ceil((double)chunk_text_size/sub) ;
+	// the maximum number of lines to allow to buffer
+	int L_max = kmeans_size/(avg_line_size+sizeof(char *)) ;
+	
+	// // ajust the number of lines in buffer 
+	//....
+	
+	//allocate matrix
+	X = (double *) malloc(sizeof(double)*sub*dim); 
+	//begin reading the file
+	//printf("start reading\n avg_line_size=%d\n",avg_line_size) ;
+	fseek(src, marks[offset/sub], SEEK_CUR); 
+	char delim[3]="\t"; 
+	char *token; 
+	char **buff=NULL;
+
+	//load the chunk
+	j=0; 
+	int L=0 ;
+	int to_read_lines = sub ;
+	while (!feof(src) && !stop){
+		//allocate buffer size
+		if(L_max>to_read_lines)	L_max = to_read_lines ;
+		buff = (char **) malloc(sizeof(char *) * L_max) ;
+
+		// fill the buffer as much as possible
+		L = 0 ;
+		while(!feof(src) && L < L_max ){	
+			fgets (line,sizeof(line), src);
+			buff[L] = strndup(line,strlen(line)) ;
+			//
+			L++ ;
+		}
+		to_read_lines -= L ;
+
+		// convert data strings to matrix values
+		for(int l = 0 ; l<L ; l++){
+			token = strtok(buff[l], delim);
+			while (token != NULL){
+				X[j] = atof(token); 
+				j++;
+				token = strtok(NULL, delim);
+			}
+			
+			free(buff[l]) ;
+			buff[l] = NULL ;
+		}
+
+		if (sub!=0)
+			if ((j/(dim))==sub)
+				stop=1; 
+
+		free(buff);
+		buff = NULL;
+	} 
+
+	fclose(src);
+	
 	return X; 
 }
 
@@ -792,7 +860,9 @@ double * kmeans_init_plusplus(double *X, size_t N, size_t dim, size_t k){
 	double * distance_cur_center = (double *) malloc (sizeof(double)*N); 
 	int * centers_int = (int *) malloc (sizeof(int)*k); 
 	double sum =0; 
-	int first = rand()%N; 
+	//int first = rand()%N; 
+	int first = chunk_index++ ;
+
 	int i, j, best;  
 	centers_int[0] = first; 
 	for (i=1; i<k; i++){
@@ -1008,7 +1078,7 @@ void form_index ( int *cluster_assignement, int nb_groupes, groupe *grp, size_t 
 	free(index_grp); 
 } 
 
-double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int * cluster_assignment, int nb_groupes, size_t N, size_t dim, size_t taille){
+double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int * cluster_assignment, int nb_groupes, size_t N, size_t dim, int k , size_t taille){
 	double * chunk =(double *) malloc (sizeof(double )*(dim*taille)); 
 	int nb_samples; 
 	int j, index_groupe, l, size =0,i, found, m, *int_chunk; 
@@ -1036,7 +1106,8 @@ double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int *
 				//choose the elements in the chunk randomly
 				for (j=0; j<nb_samples;j++){
 				
-				tmp = rand()%grp[i].nb_members;
+				//tmp = rand()%grp[i].nb_members;
+				tmp = (j+i*nb_samples)%grp[i].nb_members;
 				
 				if (size==taille) 
 						break;
@@ -1071,7 +1142,8 @@ double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int *
 	//iterate over chunk points
 	for (i=0; i<N/taille;i++){
 		if (index[i].element!=-1){
-			Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
+			//Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
+			Y = getmatrix_buf(source, dim,k, taille,taille,i*taille, marks); 
 			//printf ("chunk %d\n", i); 
 			for (j=0; j<dim;j++){
 				chunk[size*dim+j] = Y[index[i].element*dim+j]; 
@@ -1125,16 +1197,17 @@ void sort_centroid(size_t dim, size_t k, double * centroid){
 	free(tmp); 
 }
 
+
+
 void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int N, int k){
 	int i, j , n , m=0 , kmeans_iterations = 0 ;
 	double * Y=NULL; 
-	int * cluster_assignment_final=NULL, *cluster_assignment_final_Y=NULL; 
+	int * cluster_assignment_final=NULL, * cluster_assignment_final_Y=NULL; 
 	double * cluster_centroid=NULL, *cluster_centroid_by_chunk=NULL , *chunk_centroid = NULL ; 
-	double *var=NULL; 
+	double * var=NULL; 
 	int cluster_member_count[MAX_CLUSTERS]; //à modifier pour une allocation dynamique 
 	int nb_groupes=0; 
-	groupe *groupes=NULL; 
-	
+	groupe * groupes=NULL; 
 	
 	/****** PHASE 1 : PARTIELS CHUNKS KMEANS ******/
 
@@ -1142,6 +1215,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 	save_phase_time(1,1,0,-1);
 	int *marks = mark(source, dim, N, taille);
 	save_phase_time(1,1,1,-1);
+	
 	//apply kmeans on each chunk
 	if (N/taille >1){
 		save_phase_time(1,2,0,0);
@@ -1149,27 +1223,22 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		cluster_centroid_by_chunk = (double *)malloc(sizeof(double)*(k*dim*N/taille)); 
 		var = (double *) malloc (sizeof(double)*k*N/taille); 
 
-		// char *cluster_centroid_file;
-    	// asprintf(&cluster_centroid_file,"results/1024MC_centers/chunks_centers_%d.csv",(N/taille));
-		// int *chunks_marks = mark(cluster_centroid_file, dim, k*N/taille, k*N/taille);
-		// chunk_centroid = getmatrix(cluster_centroid_file,dim,k*N/taille,k*N/taille,0,chunks_marks) ;
-		
 		for( m = 0; m<N/taille; m++){
 			//lecture du chunk 
 			i = m*taille;
-			Y = getmatrix(source, dim, taille,taille,i, marks); 
+			//Y = getmatrix(source, dim,taille,taille,i, marks); 
+			Y = getmatrix_buf(source, dim,k, taille,taille,i, marks); 
 			save_phase_time(1,2,(m+1),1);	//get matrix
-			//
+			
 			//chunk m init kmeans++ 
 			cluster_centroid = kmeans_init_plusplus(Y, taille, dim, k);
-			//r8mat_write ("results/chunks_centers.csv",dim,k,cluster_centroid) ;
-			//cluster_centroid = getsubmatrix(chunk_centroid,dim,m*k,k) ;
-			
 			save_phase_time(1,3,(m+1),1);
+
 			//apply kmeans on the chunk m
 			cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
 			kmeans(dim,Y,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations);
 			save_phase_time(1,4,(m+1),kmeans_iterations);
+
 			//variance calculation on the chunk m
 			for ( j=0; j<k;j++){
 				var[m*k+j] = var_calculate (Y, dim, cluster_centroid, j, cluster_assignment_final_Y , taille)/taille; 
@@ -1195,8 +1264,8 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		}
 
 		/****** PHASE 2 : PARTIELS CLUSTERS GROUPING ******/
-		groupes = (groupe * ) malloc (sizeof(groupe )*N/taille*k);
 		save_phase_time(2,1,0,0);
+		groupes = (groupe * ) malloc (sizeof(groupe )*N/taille*k);
 		nb_groupes =0; 
 		for (j=0; j< k*N/taille; j++){
 			if (!existG(groupes, nb_groupes, j)){
@@ -1217,11 +1286,10 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 			}
 		}
 		save_phase_time(2,1,1,j);
-
-		//printf ("groups number %d\n", nb_groupes);
+		
 		free(cluster_centroid_by_chunk); 
 		cluster_centroid_by_chunk = NULL;
-		
+
 		save_phase_time(2,2,0,0);
 		//groups members count update
 		float count = k*N/taille; 
@@ -1239,7 +1307,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		/****** PHASE 3 : FINAL CHUNK BUILDING ******/
 		save_phase_time(3,1,0,-1);
 		double * chunk; 
-		chunk = form_chunk(groupes,source, marks,cluster_assignment_final, nb_groupes, N, dim, taille); 
+		chunk = form_chunk(groupes,source, marks,cluster_assignment_final, nb_groupes, N, dim,k, taille); 
 		save_phase_time(3,1,1,-1);
 
 		free(cluster_assignment_final); 
@@ -1272,12 +1340,13 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 	else{
 		save_phase_time(2,1,0,-1);
 		double* X; 
-		X = getmatrix(source, dim, N,N,0, marks );
+		//X = getmatrix(source, dim, N,N,0, marks );
+		X = getmatrix_buf(source, dim,k, N,N,0, marks );
 		save_phase_time(2,1,1,-1);
 
 		save_phase_time(2,2,0,0);
 		cluster_centroid =kmeans_init_plusplus(X, N, dim, k);
-		r8mat_write ("results/chunks_centers.csv",dim,k,cluster_centroid) ;
+		//r8mat_write ("results/chunks_centers.csv",dim,k,cluster_centroid) ;
 		save_phase_time(2,2,1,1);
 		//cluster_centroid = random_center_init(X, N, dim, k);
 		save_phase_time(2,3,0,0);	
@@ -1294,10 +1363,10 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 	// free(var);
 	// var = NULL; 
 
-	// free(cluster_assignment_final_Y);
-	// cluster_assignment_final_Y = NULL; 
-	// free(cluster_centroid); 	
-	// cluster_centroid =NULL;
+	free(cluster_assignment_final_Y);
+	cluster_assignment_final_Y = NULL; 
+	free(cluster_centroid); 	
+	cluster_centroid =NULL;
 }
 
 void kmeans_kmeans(double * X,int dim, int taille, int N, int k){ //expérimentation de la méthode de kmeans de kmeans sans formation de chunk représentatif
