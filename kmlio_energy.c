@@ -40,6 +40,7 @@ clear && gcc -g kmlio.c -o kmlio -lm -D _GNU_SOURCE && ./kmlio generator/CM_5,8M
 
 #define BIG_double (INFINITY)
 
+int chunk_index = 1 ;
 
 struct groupe{
 int * means; 
@@ -661,16 +662,6 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 	char *token; 
 
 	j=0; 
-
-	// char *line = NULL;
-	// ssize_t len;
-    // ssize_t read;
-	// (read = getline(&line, &len, fp)) != -1
-	// for(int i = 0 ; i<dim ; i++){
-		// 	fscanf(src,"%lf\t",&X[j]);	//%[^\n]
-		// }
-		//token = {"0.585892555269932","0.423707833870107","0.319247551400019","0.48577704408605","0.527776968745389","0.593186599190845","0.589352448845588","0.490654428777696","0.646799393886685","0.579247317808938"} ;
-
 	while (!feof(src) && !stop){
 		fgets (line,100000, src); 
 		token = strtok(line, delim);
@@ -686,10 +677,6 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 	} 
 	fclose(src);
 
-	//*N=j/(*dim);
-	//*d = *dim; 
-	//free(dim);
-	//dim = NULL;
 	return X; 
 }
 
@@ -791,7 +778,8 @@ double * kmeans_init_plusplus(double *X, size_t N, size_t dim, size_t k){
 	double * distance_cur_center = (double *) malloc (sizeof(double)*N); 
 	int * centers_int = (int *) malloc (sizeof(int)*k); 
 	double sum =0; 
-	int first = rand()%N; 
+	//int first = rand()%N; 
+	int first = chunk_index++ ; 
 	int i, j, best;  
 	centers_int[0] = first; 
 	for (i=1; i<k; i++){
@@ -1035,7 +1023,8 @@ double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int *
 				//choose the elements in the chunk randomly
 				for (j=0; j<nb_samples;j++){
 				
-				tmp = rand()%grp[i].nb_members;
+				//tmp = rand()%grp[i].nb_members;
+				tmp = (j+i*nb_samples)%grp[i].nb_members;
 				
 				if (size==taille) 
 						break;
@@ -1148,10 +1137,10 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		cluster_centroid_by_chunk = (double *)malloc(sizeof(double)*(k*dim*N/taille)); 
 		var = (double *) malloc (sizeof(double)*k*N/taille); 
 
-		char *cluster_centroid_file;
-    	asprintf(&cluster_centroid_file,"results/1024MC_centers/chunks_centers_%d.csv",(N/taille));
-		int *chunks_marks = mark(cluster_centroid_file, dim, k*N/taille, k*N/taille);
-		chunk_centroid = getmatrix(cluster_centroid_file,dim,k*N/taille,k*N/taille,0,chunks_marks) ;
+		// char *cluster_centroid_file;
+    	// asprintf(&cluster_centroid_file,"results/1024MC_centers/chunks_centers_%d.csv",(N/taille));
+		// int *chunks_marks = mark(cluster_centroid_file, dim, k*N/taille, k*N/taille);
+		// chunk_centroid = getmatrix(cluster_centroid_file,dim,k*N/taille,k*N/taille,0,chunks_marks) ;
 		
 		for( m = 0; m<N/taille; m++){
 			//lecture du chunk 
@@ -1275,10 +1264,10 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 
 		// save_phase_time(2,2,0,0);
 		cluster_centroid =kmeans_init_plusplus(X, N, dim, k);
-		char *cluster_centroid_file;
-    	asprintf(&cluster_centroid_file,"results/1024MC_centers/chunks_centers_%d.csv",(N/taille));
-		int *chunks_marks = mark(cluster_centroid_file, dim, k, k);
-		cluster_centroid = getmatrix(cluster_centroid_file,dim,k,k,0,chunks_marks) ;
+		// char *cluster_centroid_file;
+    	// asprintf(&cluster_centroid_file,"results/1024MC_centers/chunks_centers_%d.csv",(N/taille));
+		// int *chunks_marks = mark(cluster_centroid_file, dim, k, k);
+		// cluster_centroid = getmatrix(cluster_centroid_file,dim,k,k,0,chunks_marks) ;
 		//r8mat_write ("results/chunks_centers.csv",dim,k,cluster_centroid) ;
 		// save_phase_time(2,2,1,1);
 		//cluster_centroid = random_center_init(X, N, dim, k);
