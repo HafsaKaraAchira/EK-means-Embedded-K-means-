@@ -1151,7 +1151,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 			//chunk m init kmeans++ 
 			cluster_centroid = kmeans_init_plusplus(Y, taille, dim, k);
 			//r8mat_write ("results/chunks_centers.csv",dim,k,cluster_centroid) ;
-			cluster_centroid = getsubmatrix(chunk_centroid,dim,m*k,k) ;
+			//cluster_centroid = getsubmatrix(chunk_centroid,dim,m*k,k) ;
 			
 			// save_phase_time(1,3,(m+1),1);
 			//apply kmeans on the chunk m
