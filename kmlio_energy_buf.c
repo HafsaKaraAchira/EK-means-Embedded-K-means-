@@ -641,7 +641,7 @@ long *mark(char *source, size_t dim, size_t N, int chunk_size){
 		j=(j+1)%chunk_size; 
 		if (j==0){
 			marks[mark_index]=ftell(src);
-			printf ("marks[%d] = %ld\n", mark_index, ftell(src));
+			// printf ("marks[%d] = %ld\n", mark_index, ftell(src));
 			mark_index++; 
 		}
 	}
@@ -1231,13 +1231,13 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 	/****** PHASE 1 : PARTIELS CHUNKS KMEANS ******/
 
 	//mark the chunks in dataset
-	save_phase_time(1,1,0,-1);
+	// save_phase_time(1,1,0,-1);
 	long *marks = mark(source, dim, N, taille);
-	save_phase_time(1,1,1,-1);
+	// save_phase_time(1,1,1,-1);
 	
 	//apply kmeans on each chunk
 	if (N/taille >1){
-		save_phase_time(1,2,0,0);
+		// save_phase_time(1,2,0,0);
 		cluster_assignment_final = (int *) malloc(N*sizeof(int));
 		cluster_centroid_by_chunk = (double *)malloc(sizeof(double)*(k*dim*N/taille)); 
 		var = (double *) malloc (sizeof(double)*k*N/taille); 
@@ -1247,16 +1247,16 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 			i = m*taille;
 			//Y = getmatrix(source, dim,taille,taille,i, marks); 
 			Y = getmatrix_buf(source, dim,k, taille,taille,i, marks); 
-			save_phase_time(1,2,(m+1),1);	//get matrix
+			// save_phase_time(1,2,(m+1),1);	//get matrix
 			//sleep(15) ;
 			//chunk m init kmeans++ 
 			cluster_centroid = kmeans_init_plusplus(Y, taille, dim, k);
-			save_phase_time(1,3,(m+1),1);
+			// save_phase_time(1,3,(m+1),1);
 
 			//apply kmeans on the chunk m
 			cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
 			kmeans(dim,Y,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations);
-			save_phase_time(1,4,(m+1),kmeans_iterations);
+			// save_phase_time(1,4,(m+1),kmeans_iterations);
 
 			//variance calculation on the chunk m
 			for ( j=0; j<k;j++){
@@ -1279,11 +1279,11 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 			free(cluster_assignment_final_Y); 
 			cluster_assignment_final_Y=NULL; 
 
-			save_phase_time(1,5,(m+1),1);
+			// save_phase_time(1,5,(m+1),1);
 		}
 
 		/****** PHASE 2 : PARTIELS CLUSTERS GROUPING ******/
-		save_phase_time(2,1,0,0);
+		// save_phase_time(2,1,0,0);
 		groupes = (groupe * ) malloc (sizeof(groupe )*N/taille*k);
 		nb_groupes =0; 
 		for (j=0; j< k*N/taille; j++){
@@ -1304,12 +1304,12 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 				nb_groupes++; 
 			}
 		}
-		save_phase_time(2,1,1,j);
+		// save_phase_time(2,1,1,j);
 		
 		free(cluster_centroid_by_chunk); 
 		cluster_centroid_by_chunk = NULL;
 
-		save_phase_time(2,2,0,0);
+		// save_phase_time(2,2,0,0);
 		//groups members count update
 		float count = k*N/taille; 
 		get_cluster_member_count(((int) (N/taille)) * taille, (int) count, cluster_assignment_final, cluster_member_count);
@@ -1321,13 +1321,13 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 			}
 		}
 
-		save_phase_time(2,2,1,nb_groupes);
+		// save_phase_time(2,2,1,nb_groupes);
 
 		/****** PHASE 3 : FINAL CHUNK BUILDING ******/
-		save_phase_time(3,1,0,-1);
+		// save_phase_time(3,1,0,-1);
 		double * chunk; 
 		chunk = form_chunk(groupes,source, marks,cluster_assignment_final, nb_groupes, N, dim,k, taille); 
-		save_phase_time(3,1,1,-1);
+		// save_phase_time(3,1,1,-1);
 
 		free(cluster_assignment_final); 
 		cluster_assignment_final =NULL; 
@@ -1340,14 +1340,14 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		
 		/****** PHASE 4 : FINAL CHUNK KMEANS ******/
 
-		save_phase_time(4,1,0,-1);
+		// save_phase_time(4,1,0,-1);
 		cluster_centroid =kmeans_init_plusplus(chunk, taille, dim, k);
-		save_phase_time(4,1,1,-1);
+		// save_phase_time(4,1,1,-1);
 		
-		save_phase_time(4,2,0,0);
+		// save_phase_time(4,2,0,0);
 		cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
 		kmeans(dim,chunk,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations);
-		save_phase_time(4,2,1,kmeans_iterations);
+		// save_phase_time(4,2,1,kmeans_iterations);
 
 		//sort_centroid (dim, k, cluster_centroid);
 		//i4mat_write ("results/clusters.csv",1,N,cluster_assignment_final_Y) ;
@@ -1358,21 +1358,21 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		}
 	else{
 		//sleep(20) ;
-		save_phase_time(2,1,0,-1);
+		// save_phase_time(2,1,0,-1);
 		double* X; 
 		//X = getmatrix(source, dim, N,N,0, marks );
 		X = getmatrix_buf(source, dim,k, N,N,0, marks );
-		save_phase_time(2,1,1,-1);
+		// save_phase_time(2,1,1,-1);
 		//sleep(20) ;
-		save_phase_time(2,2,0,0);
+		// save_phase_time(2,2,0,0);
 		cluster_centroid =kmeans_init_plusplus(X, N, dim, k);
 		//r8mat_write ("results/chunks_centers.csv",dim,k,cluster_centroid) ;
-		save_phase_time(2,2,1,1);
+		// save_phase_time(2,2,1,1);
 		//cluster_centroid = random_center_init(X, N, dim, k);
-		save_phase_time(2,3,0,0);	
+		// save_phase_time(2,3,0,0);	
 		cluster_assignment_final=  (int *) malloc(N*sizeof(int)); 
 		kmeans(dim,X,N, k, cluster_centroid, cluster_assignment_final,&kmeans_iterations);
-		save_phase_time(2,3,1,kmeans_iterations);
+		// save_phase_time(2,3,1,kmeans_iterations);
 		//sort_centroid (dim, k, cluster_centroid);
 		//cluster_diag(dim, N, k, X, cluster_assignment_final, cluster_centroid);
 		free(X);
@@ -1474,8 +1474,8 @@ int main (int argc, char **argv){
 	//end = clock(); 
 	//printf ("KMEANS TIME = %lf min\n", (float)(tv_end.tv_sec - tv_begin.tv_sec)/60);
 	
-	system("pkill watch");
-	system("killall -9 prog_script_cpu_io");
+	// system("pkill watch");
+	// system("killall -9 prog_script_cpu_io");
 	
 	return 0;
 }

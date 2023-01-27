@@ -21,14 +21,14 @@ dim = 10
 
 #@measure_energy(handler=csv_handler, domains=[RaplCoreDomain(0),RaplDramDomain(0)])
 def program_call(M):
-    os.system("./prog_kmlio_energy "+file+" "+str(k)+" "+str(N)+" "+str(int(N/M))+" "+str(dim))
+    os.system("./prog_energy_buf "+file+" "+str(k)+" "+str(N)+" "+str(int(N/M))+" "+str(dim))
 
 affinity_mask = {1}
 pid = 0
 os.sched_setaffinity(0, affinity_mask)
 
-governors = ["performance"]#["ondemand","performance","conservative","schedutil"] #,"powersave"]
-memory_constraint = [4] #[1,2,4,5,8,10]
+governors = ["ondemand","performance","conservative","schedutil"] #,"powersave"]
+memory_constraint = [1,2,4,5,8,10]
 
 def prog_memory_est(N,dim,k,MC) :
     double_size = 8
@@ -55,8 +55,8 @@ for MC in reversed(memory_constraint) :
     for governor in governors :
         os.system("echo "+governor+" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
         os.system("./scripts/prog_script_cache")
-        time.sleep(30)
-        with EnergyContext(handler=csv_handler, domains=[RaplCoreDomain(0),RaplDramDomain(0)], start_tag=str(MC)+","+governor) as ctx:
+        time.sleep(5)
+        with EnergyContext(handler=csv_handler, domains=[RaplCoreDomain(0),RaplDramDomain(0)], start_tag=str(N)+","+str(int(N/MC))+","+str(MC)+","+governor) as ctx:
             # call the target program
             program_call(MC)
 
