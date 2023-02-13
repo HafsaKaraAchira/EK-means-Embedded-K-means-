@@ -10,7 +10,8 @@ do
         ( 
             date +%s%3N ; 
             echo "*,*,*,*,*" ;
-            top -b -1 -n 2 -p $(pgrep -d',' program) -e k -E k | tail -1 | awk '{print $6,$3,$9,$10,$11}';
+            top -b -1 -n 2 -p $(pgrep -d',' program) -e k -E k | tail -1 | awk '{print $3,$2,$5,$6}' ;
+            cat /sys/class/thermal/thermal_zone9/temp ;
             iotop -n2 -qqq -t -k -p $(pgrep -d',' program) | tail -1 | awk '{print $5,$7}';
         )
     ) | xargs | sed 's/ /,/g' | tee -a $parent_path/../logs/log_cpu_io.csv > /dev/null

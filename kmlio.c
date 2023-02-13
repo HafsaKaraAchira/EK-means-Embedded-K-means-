@@ -4,12 +4,13 @@
 
 /*
 
-cd /home/hafsa/Documents/@K-MLIO_Analysis/
-scripts/prog_script_cgroup 100
+DELL : cd /home/hafsa/Documents/@K-MLIO_Analysis/
+BeagleBone : cd /home/debian/@K-MLIO_Analysis/
+scripts/prog_script_cgroup 1104
 scripts/prog_script_reset
-clear && gcc -g kmlio.c -o kmlio -lm -D _GNU_SOURCE && ./kmlio generator/CM_5,8M_1000MO_SEP_0,3/points.csv 10 5800000 580000 10
 
-(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM_5,8M_1000MO_SEP_0,3/points.csv 10 5800000 580000 10) & (taskset -c 1 scripts/prog_script_launch))
+(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && (./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10)
+(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10) & (taskset -c 1 scripts/prog_script_launch))
 
 */
 
@@ -1161,7 +1162,7 @@ double * form_chunk( groupe *grp, /*double *X*/char * source, long * marks, int 
 	//iterate over chunk points
 	for (i=0; i<N/taille;i++){
 		if (index[i].element!=-1){
-			//Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
+			// Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
 			Y = getmatrix_buf(source, dim,k, taille,taille,i*taille, marks); 
 			//printf ("chunk %d\n", i); 
 			for (j=0; j<dim;j++){
@@ -1245,7 +1246,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		for( m = 0; m<N/taille; m++){
 			//lecture du chunk 
 			i = m*taille;
-			//Y = getmatrix(source, dim,taille,taille,i, marks); 
+			// Y = getmatrix(source, dim,taille,taille,i, marks); 
 			Y = getmatrix_buf(source, dim,k, taille,taille,i, marks); 
 			save_phase_time(1,2,(m+1),1);	//get matrix
 			//sleep(15) ;
@@ -1360,7 +1361,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		//sleep(20) ;
 		save_phase_time(2,1,0,-1);
 		double* X; 
-		//X = getmatrix(source, dim, N,N,0, marks );
+		// X = getmatrix(source, dim, N,N,0, marks );
 		X = getmatrix_buf(source, dim,k, N,N,0, marks );
 		save_phase_time(2,1,1,-1);
 		//sleep(20) ;
@@ -1453,6 +1454,10 @@ int main (int argc, char **argv){
 	sprintf (cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
 	//printf ("%s\n", cmd);
 	system(cmd); 
+
+	sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	system(cmd); 
+
 	sleep(1);
 	
 	char * source = argv[1]; 
