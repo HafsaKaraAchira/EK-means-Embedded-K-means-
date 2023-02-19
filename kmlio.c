@@ -40,7 +40,7 @@ scripts/prog_script_reset
 
 #define MAX_CLUSTERS 100000
 
-#define MAX_ITERATIONS 150
+#define MAX_ITERATIONS 25 // decrease iterations number for beaglebone overheating issue
 
 #define BIG_double (INFINITY)
 
