@@ -2,6 +2,8 @@
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
+therm_zone=$(cat /sys/class/thermal/thermal_zone*/type | grep -n x86_pkg_temp | head -c1)
+
 while ! pgrep -x "htop" > /dev/null ; do : ; done
 
 while :
@@ -10,8 +12,9 @@ do
         ( 
             date +%s%3N ; 
             echo "*,*,*,*,*" ;
-            top -b -1 -n 2 -p $(pgrep -d',' program) -e k -E k | tail -1 | awk '{print $6,$3,$9,$10,$11}';
-            iotop -n2 -qqq -t -k -p $(pgrep -d',' program) | tail -1 | awk '{print $5,$7}';
+            top -b -1 -n 1 -p $(pgrep -d',' program) -e m -E m | tail -1 | awk '{print $2,$3,$4,$5}' ;
+            cat /sys/class/thermal/thermal_zone$((therm_zone -1))/temp ;
+            iotop -n2 -qqq -t -k -p $(pgrep -d',' program) | tail -1 | awk '{print $5}';
         )
     ) | xargs | sed 's/ /,/g' | tee -a $parent_path/../logs/log_cpu_io.csv > /dev/null
 done

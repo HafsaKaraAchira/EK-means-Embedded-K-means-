@@ -4,12 +4,13 @@
 
 /*
 
-cd /home/hafsa/Documents/@K-MLIO_Analysis/
-scripts/prog_script_cgroup 100
+DELL : cd /home/hafsa/Documents/@K-MLIO_Analysis/
+BeagleBone : cd /home/debian/@K-MLIO_Analysis/
+scripts/prog_script_cgroup 1104
 scripts/prog_script_reset
-clear && gcc -g kmlio.c -o kmlio -lm -D _GNU_SOURCE && ./kmlio generator/CM_5,8M_1000MO_SEP_0,3/points.csv 10 5800000 580000 10
 
-(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM_5,8M_1000MO_SEP_0,3/points.csv 10 5800000 580000 10) & (taskset -c 1 scripts/prog_script_launch))
+(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && (./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10)
+(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10) & (taskset -c 1 scripts/prog_script_launch))
 
 */
 
@@ -24,6 +25,9 @@ clear && gcc -g kmlio.c -o kmlio -lm -D _GNU_SOURCE && ./kmlio generator/CM_5,8M
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <fcntl.h>
+// #include <gc.h>
+#include <malloc.h>
+#include <sys/mman.h>
 
 #ifndef _GNU_SOURCE
 #define	_GNU_SOURCE 1
@@ -41,6 +45,10 @@ clear && gcc -g kmlio.c -o kmlio -lm -D _GNU_SOURCE && ./kmlio generator/CM_5,8M
 #define BIG_double (INFINITY)
 
 int chunk_index = 1 ;
+
+size_t max_line_size = 0 ;
+
+
 
 struct groupe{
 int * means; 
@@ -62,11 +70,14 @@ void fail(char *str)
     exit(-1);
   }
 
+
 void save_phase_time(int phase, int step ,int loop , int iteration){
     char *cmd;
 	//printf("iterations=%d",iteration);
-    asprintf(&cmd,"taskset -c 2 ./scripts/prog_script_phase %d %d %d %d",phase,step,loop,iteration);
+    asprintf(&cmd,"taskset -c $(($(nproc) - 1)) ./scripts/prog_script_phase %d %d %d %d",phase,step,loop,iteration);
 	system(cmd);
+	free(cmd) ;
+	cmd=NULL ;
 }
 
 double *r8mat_data_read ( char *input_filename, int m, int n )
@@ -182,7 +193,6 @@ double *r8mat_data_read ( char *input_filename, int m, int n )
 }
 /******************************************************************************/
  
-
 void r8mat_write ( char *output_filename, int m, int n, double table[] )
 
 /******************************************************************************/
@@ -252,7 +262,6 @@ void r8mat_write ( char *output_filename, int m, int n, double table[] )
   return;
 }
 /******************************************************************************/
-
 
 void i4mat_write ( char *output_filename, int m, int n, int table[] )
 
@@ -324,7 +333,45 @@ void i4mat_write ( char *output_filename, int m, int n, int table[] )
 }
 /******************************************************************************/
 
-  
+void rbinmat_write ( char *output_filename, int m, int n, double table[] )
+
+/******************************************************************************/
+/*
+*/
+{
+  int i;
+  int j;
+  FILE *output;
+/*
+  Open the file.
+*/
+  output = fopen ( output_filename, "at" );
+
+  if ( !output )
+  {
+    fprintf ( stderr, "\n" );
+    fprintf ( stderr, "R8MAT_WRITE - Fatal error!\n" );
+    fprintf ( stderr, "  Could not open the file '%s'.\n", output_filename );
+    exit ( 1 );
+  }
+/*
+  Write the data.
+*/
+  for ( j = 0; j < n; j++ )
+  {
+    for ( i = 0; i < m; i++ )
+    {
+      fwrite ( &table[i+j*m],sizeof(double),1,output ); //%24.16g
+    }
+  }
+/*
+  Close the file.
+*/
+  fclose ( output );
+
+  return;
+}
+
 double calc_distance(int dim, double *p1, double *p2)
   {
     double distance_sq_sum = 0;
@@ -628,8 +675,8 @@ int   *cluster_assignment_prev = NULL;
    // free(point_move_score);
   }           
 
-long *mark(char *source, size_t dim, size_t N, int chunk_size){
-	long  * marks= (long *) malloc (sizeof(long)*(N/chunk_size+1));
+int *mark(char *source, size_t dim, size_t N, int chunk_size){
+	int  * marks= (int *) malloc (sizeof(int)*(N/chunk_size));
 	char line[100000];
 	FILE *src = fopen(source, "r+"); char delim[3]="\t"; 
 	char *token; 
@@ -639,12 +686,14 @@ long *mark(char *source, size_t dim, size_t N, int chunk_size){
 	while (!feof(src)){
 		fgets (line,100000, src); 
 		j=(j+1)%chunk_size; 
+		//if(strlen(line)>max_line_size) max_line_size = strlen(line) ;	
 		if (j==0){
 			marks[mark_index]=ftell(src);
 			printf ("marks[%d] = %ld\n", mark_index, ftell(src));
 			mark_index++; 
 		}
 	}
+	// printf("max line size = %ld\n",max_line_size) ;
 
 	fclose(src);
 	return marks; 
@@ -665,12 +714,12 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 
 	j=0; 
 	while (!feof(src) && !stop){
-		fgets (line,100000, src); 
-		token = strtok(line, delim);
-			while (token != NULL){
-					X[j] = atof(token); 
-					j++;
-			token = strtok(NULL, delim);
+		fgets (line,100000, src) ;
+		token = strtok(line, delim) ;
+		while (token != NULL){
+			X[j] = atof(token) ; 
+			j++;
+			token = strtok(NULL, delim) ;
 		}
 
 		if (sub!=0)
@@ -684,9 +733,159 @@ double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, in
 
 
 
-double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, int offset, long * marks){
+//  double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, int offset, long * marks){
 	
-	FILE *src = fopen(source, "r"); 
+// 	FILE *src = fopen(source, "r"); 
+// 	double *X=NULL;
+// 	size_t i =0, j=0; 
+// 	int stop=0; 
+	
+// 	//decide best buffer size
+// 	int MAX_DOUBLE_LEN = 24 ;
+// 	int MAX_LINE_SIZE = (MAX_DOUBLE_LEN+1) * dim ;
+// 	char line[MAX_LINE_SIZE]; 
+	
+// 	// calculate the rest size allowed for the chunk kmeans
+// 	int kmeans_size = (sizeof(double)*k + 2*sizeof(int) + sizeof(int))*sub ;
+// 	// the size of chunk data in file
+// 	long chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
+// 	// printf("chunk size = %ld\t begin = %ld \t end = %ld\n",chunk_text_size,marks[(offset/sub)+1],marks[offset/sub]) ;
+// 	// the average size of chunk line in file
+// 	int avg_line_size = ceil(chunk_text_size/(double)sub) ;
+
+// 	// the maximum number of lines to allow to buffer
+// 	long L_max = kmeans_size/(avg_line_size+1+sizeof(char *)) ;
+// 	//int L_opt = ceil( (double)(sub*L_max) / (double)(sub+L_max) ) ;
+	
+// 	// ajust the number of lines in buffer 
+// 	int it_num = ceil((double)sub/L_max) ;
+// 	// balance the number of read lines in each iteration
+// 	long L_opt = ceil((double)sub / it_num) ;
+	
+// 	//allocate matrix
+// 	X = (double *) malloc(sizeof(double)*sub*dim); 
+// 	//sleep(20) ;
+// 	//begin reading the file
+// 	fseek(src, marks[offset/sub], SEEK_CUR); 
+// 	char delim[3]="\t"; 
+// 	//var to handle strtok tokens
+// 	char *token ; 
+// 	//store the buffered lines read form files at once
+	
+
+// 	//load the chunk
+// 	j=0; 
+// 	long L=0 ;
+// 	long to_read_lines = sub ;
+
+// 	// printf("stop before buffer iteration\n") ;
+// 	// sleep(20) ;
+	
+// 	// printf("Lmax = %ld \tLopt = %ld \tavg line size = %ld \t\n",L_max,L_opt,avg_line_size+1+sizeof(char *)) ;
+	
+	
+// 	while (!feof(src) && !stop){
+// 		//allocate buffer size
+// 		if(L_opt>to_read_lines)	L_opt = to_read_lines ;
+
+// 		buff = calloc( L_opt,sizeof(char *)) ;
+// 		printf("stop after buf malloc\n") ;
+// 		sleep(10) ;
+// 		// fill the buffer as much as possible
+// 		L = 0 ;
+		
+// 		// size_t buffer_len = 0 ;
+// 		// while(!feof(src) && L < L_opt){	
+// 		// 	fgets (line,sizeof(line), src);
+// 		// 	//buff[L] = malloc(strlen(line)*sizeof(char)) ;
+// 		// 	//strncpy(buff[L],line,strlen(line));
+// 		// 	buff[L] = malloc(avg_line_size*sizeof(char)) ;
+// 		// 	// strndup(line,strlen(line)) ;
+// 		// 	buffer_len += strlen(line) ;
+// 		// 	L++ ;
+// 		// }
+
+// 		L=2236967 ;
+// 		// printf("Lmax = %ld \tLopt = %ld \tavg line size = %ld \tbuf_size %f MB + %f MB\n",L_max,L_opt,avg_line_size+1+sizeof(char *),buffer_len/pow(1024,2),(L_opt*sizeof(char*))/pow(1024,2)) ;
+// 		to_read_lines -= L ;
+// 		//printf("stop after buf fill\n") ;
+// 		//sleep(20) ;
+
+// 		// convert data strings to matrix values
+// 		for(long l = 0 ; l<L ; l++){
+// 			//lncpy = strdup(buff[l]) ;
+// 			// token = strtok(buff[l], delim);
+// 			// while (token != NULL){
+// 			for(int d = 0 ; d<10 ; d++){
+// 				X[j] = atof("0"); 
+// 				j++;
+// 				// token = strtok(NULL, delim);
+// 			}
+			
+// 			// free(buff[l]) ;
+// 			// buff[l] = NULL ;
+// 		}
+
+// 		if(buff != NULL){
+// 			free(buff);
+// 			buff = NULL ;
+// 			printf("stop after buffer free\n") ;
+// 			sleep(10) ;
+// 		}
+
+// 		if (sub!=0){
+// 			if ((j/(dim))==sub) {
+// 				stop=1;
+// 				 printf("GET MATRIX COMPLETE\n") ;
+// 			}
+// 		}
+			
+// 	} 
+
+// 	fclose(src);
+	
+// 	return X; 
+// }
+
+
+void free_buf(char ** buf, int L){
+	if(buf != NULL){
+		for(int l = 0 ; l<L ; l++)
+			free(buf[l]) ;
+		free(buf);
+		buf = NULL ;
+	}	
+}
+
+double * getmatrix_bin( char * source, size_t dim, size_t N, int sub, int offset){
+	FILE *src = fopen(source, "rb"); 
+	printf("binary file opened\n") ;
+	double *X=NULL;
+	size_t i =0, j=0; 
+	int stop=0; 
+
+	X = (double *) malloc(sizeof(double)*sub*dim); 
+	fseek(src,sizeof(double)*offset, SEEK_CUR);  
+	printf("binary file fseek done\n") ;
+
+	j=0; 
+	while (!feof(src) && !stop){
+		fread(&X[j], sizeof(double),1,src) ;
+		j++ ;
+		if (sub!=0)
+			if ((j/(dim))==sub)
+				stop=1; 
+	}
+	fclose(src);
+
+	return X; 
+}
+
+
+double * getmatrix_mmap( char * source, size_t dim, int k , size_t N, int sub, int offset, int * marks){
+	
+	int src = open (source, O_RDONLY);
+
 	double *X=NULL;
 	size_t i =0, j=0; 
 	int stop=0; 
@@ -694,89 +893,200 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 	//decide best buffer size
 	int MAX_DOUBLE_LEN = 24 ;
 	int MAX_LINE_SIZE = (MAX_DOUBLE_LEN+1) * dim ;
-	char line[MAX_LINE_SIZE]; 
+	char line[MAX_LINE_SIZE];
 	
 	// calculate the rest size allowed for the chunk kmeans
 	int kmeans_size = (sizeof(double)*k + 2*sizeof(int) + sizeof(int))*sub ;
 	// the size of chunk data in file
-	long chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
-	// printf("chunk size = %ld\t begin = %ld \t end = %ld\n",chunk_text_size,marks[(offset/sub)+1],marks[offset/sub]) ;
+	int chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
 	// the average size of chunk line in file
 	int avg_line_size = ceil(chunk_text_size/(double)sub) ;
-
-	// the maximum number of lines to allow to buffer
-	long L_max = kmeans_size/(avg_line_size+1+sizeof(char *)) ;
-	//int L_opt = ceil( (double)(sub*L_max) / (double)(sub+L_max) ) ;
-	
+	// the maximum number of lines to store in buffer
+	int L_max = kmeans_size/(max_line_size+1+sizeof(char *)) ;
 	// ajust the number of lines in buffer 
 	int it_num = ceil((double)sub/L_max) ;
 	// balance the number of read lines in each iteration
-	long L_opt = ceil((double)sub / it_num) ;
+	int L_opt = ceil((double)sub / it_num) ;
 	
 	//allocate matrix
 	X = (double *) malloc(sizeof(double)*sub*dim); 
 	//sleep(20) ;
 	//begin reading the file
-	fseek(src, marks[offset/sub], SEEK_CUR); 
+	lseek(src, marks[offset/sub], SEEK_CUR); 
 	char delim[3]="\t"; 
 	//var to handle strtok tokens
-	char *token; 
+	char *token ; 
 	//store the buffered lines read form files at once
-	char **buff=NULL;
+    char * mapped;
+	
 
 	//load the chunk
 	j=0; 
-	long L=0 ;
-	long to_read_lines = sub ;
-	// printf("Lmax = %ld \tLopt = %ld \tavg line size = %ld \t\n",L_max,L_opt,avg_line_size+1+sizeof(char *)) ;
+	int L=0 ;
+	int to_read_lines = sub ;
+	int s ;
 	
-	while (!feof(src) && !stop){
+	
+	while (!stop){
 		//allocate buffer size
 		if(L_opt>to_read_lines)	L_opt = to_read_lines ;
-		buff = (char **) malloc(sizeof(char *) * L_opt) ;
-		// printf("stop after buf malloc\n") ;
-		//sleep(20) ;
+
 		// fill the buffer as much as possible
-		L = 0 ;
-		size_t buffer_len = 0 ;
-		while(!feof(src) && L < L_opt){	
-			fgets (line,sizeof(line), src);
-			buff[L] = strndup(line,strlen(line)) ;
-			buffer_len += strlen(line) ;
-			//
-			L++ ;
-		}
-		// printf("Lmax = %d \tLopt = %d \tavg line size = %ld \tbuf_size in bytes%ld\n",L_max,L_opt,avg_line_size+1+sizeof(char *),buffer_len) ;
+		/* Memory-map the file. */
+    	mapped = mmap (0,chunk_text_size, PROT_READ, MAP_PRIVATE,src, 0);
+			
+    	// check (mapped == MAP_FAILED, "mmap failed\n");
+		printf("stop after buf malloc @ = %p\n",mapped) ;
+		sleep(10) ;
+		
 		to_read_lines -= L ;
-		// printf("stop after buf fill\n") ;
-		//sleep(20) ;
 
 		// convert data strings to matrix values
-		for(long l = 0 ; l<L ; l++){
-			// for(int c = 0 ;c<dim ; c++){
+		for(int l = 0 ; l<sub ; l++){
+			for(int d = 0 ; d<10 ; d++){
+				X[j] = atof("0"); 
+				j++;
+			}
+		}
+
+		//if we have read all the chunk lines
+		if (sub!=0){
+			if ((j/(dim))==sub){
+				stop=1;	
+				munmap(mapped, chunk_text_size);
+				s = malloc_trim(0);	
+				printf("stop after buf free @ = %p\n",mapped) ;
+				sleep(10) ;
+			}
+		}		
+	} 
+
+	close(src);
+
+	s = malloc_trim(0);	
+	printf("stop after buffer free , trimming status = %d\n",s) ;
+	sleep(10) ;
+
+	printf("GET MATRIX %d COMPLETE\n",offset/sub) ;
+	
+	return X; 
+}
+
+double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, int offset, int * marks){
+	
+	FILE *src = fopen(source, "r"); 
+
+	double *X=NULL;
+	size_t i =0, j=0; 
+	int stop=0; 
+	
+	//decide best buffer size
+	int MAX_DOUBLE_LEN = 24 ;
+	int MAX_LINE_SIZE = (MAX_DOUBLE_LEN+1) * dim ;
+	char line[MAX_LINE_SIZE+1];
+	
+	// calculate the rest size allowed for the chunk kmeans
+	int kmeans_size = (sizeof(double)*k + 3*sizeof(int))*sub ;
+	
+	// the size of chunk data in file
+	int chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
+	// the average size of chunk line in file
+	int avg_line_size = ceil(chunk_text_size/(double)sub) ;
+	
+	// the maximum number of lines to store in buffer
+	int L_max = kmeans_size/(avg_line_size+1+sizeof(char *)) ;
+	// ajust the number of lines in buffer 
+	int it_num = ceil((double)sub/L_max) ;
+	// balance the number of read lines in each iteration
+	int L_opt = ceil((double)sub / it_num) ;
+	
+	//allocate matrix
+	X = (double *) malloc(sizeof(double)*sub*dim); 
+	// printf("stop after X malloc\n") ;
+
+	//sleep(20) ;
+	//begin reading the file
+	fseek(src, marks[offset/sub], SEEK_CUR); 
+	char delim[3]="\t"; 
+	//var to handle strtok tokens
+	char *token ; 
+	//store the buffered lines read form files at once
+	char ** buf= (char **) calloc(L_opt , sizeof(char *)) ;
+	// printf("stop after buf malloc\n") ;
+	
+
+	//load the chunk
+	j=0; 
+	int L=0 ;
+	int to_read_lines = sub ;
+	int s ;
+	size_t max_len ;
+	
+	while (!feof(src) &&!stop){
+		//allocate buffer size
+		if(L_opt>to_read_lines)	L_opt = to_read_lines ;
+		// fill the buffer as much as possible
+		L = 0 ;
+		size_t buf_len = 0 ; 
+		while(!feof(src) && L < L_opt){	
+			fgets (line,sizeof(line), src) ;
+			buf[L] = strndup(line,strlen(line)) ;
+			// buf[L] = calloc((strlen(line)+1),sizeof(char)) ;
+			// strncpy(buf[L],line,strlen(line)) ;
+			buf[L][strlen(line)-1] = '\0' ;
+			buf_len += strlen(line)+1 ;
+			L++ ;
+		}
+		
+		// printf("stop after read\n") ;
+		// sleep(15) ;
+
+		// printf("Lmax = %d \tLopt = %d \tL = %d \tread lines = %ld \tmax line size = %ld \tstrings real size %f MB + buffer pointers size %f MB\n",L_max,L_opt, L,(j/(dim)),max_line_size+1+sizeof(char *),buf_len/pow(1024,2),(L_opt*sizeof(char*))/pow(1024,2)) ;
+		
+		L=L_opt ;
+		to_read_lines -= L ;
+
+		// convert data strings to matrix values
+		for(int l = 0 ; l<L ; l++){
+			// for(int d = 0 ; d<dim ; d++){
 			// 	X[j] = atof("0"); 
 			// 	j++;
+			// 	// token = strtok(NULL, delim);
 			// }
-			token = strtok(buff[l], delim);
+			token = strtok(buf[l],delim);
 			while (token != NULL){
 				X[j] = atof(token); 
 				j++;
-				token = strtok(NULL, delim);
+				token = strtok(NULL,delim);
 			}
-			
-			free(buff[l]) ;
-			buff[l] = NULL ;
+			free(buf[l]) ;
+			buf[l]=NULL ;
 		}
 
-		if (sub!=0)
-			if ((j/(dim))==sub)
-				stop=1; 
+		// printf("stop after fill\n") ;
+		// sleep(15) ;
 
-		free(buff);
-		buff = NULL;
+		//if we have read all the chunk lines
+		if (sub!=0){
+			if ((j/(dim))==sub){
+				stop=1;	
+				s = malloc_trim(0);	
+			}
+		}		
+	
 	} 
 
+	if(buf != NULL){
+		free(buf);
+		buf = NULL ;
+	}
+	
 	fclose(src);
+
+	s = malloc_trim(0);	
+
+	// printf("stop after free\n") ;
+	// sleep(10) ;
 	
 	return X; 
 }
@@ -1097,13 +1407,15 @@ void form_index ( int *cluster_assignement, int nb_groupes, groupe *grp, size_t 
 	free(index_grp); 
 } 
 
-double * form_chunk( groupe *grp, /*double *X*/char * source, long * marks, int * cluster_assignment, int nb_groupes, size_t N, size_t dim, int k , size_t taille){
+double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int * cluster_assignment, int nb_groupes, size_t N, size_t dim, int k , size_t taille){
 	double * chunk =(double *) malloc (sizeof(double )*(dim*taille)); 
 	int nb_samples; 
 	int j, index_groupe, l, size =0,i, found, m, *int_chunk; 
 	int tmp; 
 	double *Y; 
 	float c; 
+	char ** buf ;
+
 	index_chunk_elem  index[N/taille];
 	index_chunk_elem  * cur [N/taille];
 	index_chunk_elem * elem; 
@@ -1111,6 +1423,7 @@ double * form_chunk( groupe *grp, /*double *X*/char * source, long * marks, int 
 	index[i].element = -1; 
 	index[i].next = NULL;
 	cur[i]=NULL;
+	
 	}
 	//form groups index
 	form_index (cluster_assignment, nb_groupes, grp,  N); 
@@ -1161,7 +1474,7 @@ double * form_chunk( groupe *grp, /*double *X*/char * source, long * marks, int 
 	//iterate over chunk points
 	for (i=0; i<N/taille;i++){
 		if (index[i].element!=-1){
-			//Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
+			// Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
 			Y = getmatrix_buf(source, dim,k, taille,taille,i*taille, marks); 
 			//printf ("chunk %d\n", i); 
 			for (j=0; j<dim;j++){
@@ -1216,9 +1529,7 @@ void sort_centroid(size_t dim, size_t k, double * centroid){
 	free(tmp); 
 }
 
-
-
-void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int N, int k){
+void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 	int i, j , n , m=0 , kmeans_iterations = 0 ;
 	double * Y=NULL; 
 	int * cluster_assignment_final=NULL, * cluster_assignment_final_Y=NULL; 
@@ -1232,7 +1543,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 
 	//mark the chunks in dataset
 	save_phase_time(1,1,0,-1);
-	long *marks = mark(source, dim, N, taille);
+	int *marks = mark(source, dim, N, taille);
 	save_phase_time(1,1,1,-1);
 	
 	//apply kmeans on each chunk
@@ -1245,11 +1556,14 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		for( m = 0; m<N/taille; m++){
 			//lecture du chunk 
 			i = m*taille;
-			//Y = getmatrix(source, dim,taille,taille,i, marks); 
 			Y = getmatrix_buf(source, dim,k, taille,taille,i, marks); 
+			// Y = getmatrix(source, dim,taille,taille,i, marks); 
+			// Y = getmatrix_bin(source, dim,taille,taille,i); 
+			// Y = getmatrix_mmap(source, dim,k, taille,taille,i, marks);
+
 			save_phase_time(1,2,(m+1),1);	//get matrix
-			//sleep(15) ;
-			//chunk m init kmeans++ 
+			
+			// chunk m init kmeans++ 
 			cluster_centroid = kmeans_init_plusplus(Y, taille, dim, k);
 			save_phase_time(1,3,(m+1),1);
 
@@ -1270,16 +1584,23 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 			for ( n=0 ; n<taille; n++){		
 				cluster_assignment_final[m*taille+n]=cluster_assignment_final_Y[n]+m*k; 
 			}
-			//r8mat_write ("results/chunks_centers.csv",dim,N/taille*k,cluster_centroid_by_chunk) ;
+
+			
 			
 			free(Y);
 			Y = NULL;
+
 			free(cluster_centroid); 
 			cluster_centroid=NULL; 
+			
 			free(cluster_assignment_final_Y); 
 			cluster_assignment_final_Y=NULL; 
 
 			save_phase_time(1,5,(m+1),1);
+
+			// printf("stop after get matrix complete\n") ;
+			// sleep(10) ;
+			
 		}
 
 		/****** PHASE 2 : PARTIELS CLUSTERS GROUPING ******/
@@ -1304,6 +1625,7 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 				nb_groupes++; 
 			}
 		}
+
 		save_phase_time(2,1,1,j);
 		
 		free(cluster_centroid_by_chunk); 
@@ -1349,44 +1671,41 @@ void kmeans_by_chunk(/*double * X9*/ char * source, size_t dim, int taille, int 
 		kmeans(dim,chunk,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations);
 		save_phase_time(4,2,1,kmeans_iterations);
 
-		//sort_centroid (dim, k, cluster_centroid);
-		//i4mat_write ("results/clusters.csv",1,N,cluster_assignment_final_Y) ;
   		r8mat_write ("results/centers.csv",dim,k,cluster_centroid) ;
-		//cluster_diag(dim, taille, k, chunk, cluster_assignment_final_Y, cluster_centroid);
 		free(chunk);
 		chunk = NULL;
-		}
+	}
 	else{
 		//sleep(20) ;
 		save_phase_time(2,1,0,-1);
 		double* X; 
-		//X = getmatrix(source, dim, N,N,0, marks );
-		X = getmatrix_buf(source, dim,k, N,N,0, marks );
+		// X = getmatrix(source, dim, N,N,0, marks );
+		// rbinmat_write ("points_bin.csv",dim,N,X) ;
+		// X = getmatrix_mmap(source, dim,k,N,N,0,marks);
+		// X = getmatrix_bin(source,dim,N,N,0); 
+
+		X = getmatrix_buf(source, dim,k, N,N,0, marks);
 		save_phase_time(2,1,1,-1);
-		//sleep(20) ;
+
 		save_phase_time(2,2,0,0);
 		cluster_centroid =kmeans_init_plusplus(X, N, dim, k);
-		//r8mat_write ("results/chunks_centers.csv",dim,k,cluster_centroid) ;
 		save_phase_time(2,2,1,1);
-		//cluster_centroid = random_center_init(X, N, dim, k);
+
 		save_phase_time(2,3,0,0);	
 		cluster_assignment_final=  (int *) malloc(N*sizeof(int)); 
 		kmeans(dim,X,N, k, cluster_centroid, cluster_assignment_final,&kmeans_iterations);
 		save_phase_time(2,3,1,kmeans_iterations);
-		//sort_centroid (dim, k, cluster_centroid);
-		//cluster_diag(dim, N, k, X, cluster_assignment_final, cluster_centroid);
+
 		free(X);
 		X = NULL;
 	}
-
-	// //compare_solution ( cluster_centroid, "a1-ga-cb.txt", dim, k); 
-	// // free(var);
-	// // var = NULL; 
 
 	free(cluster_assignment_final_Y);
 	cluster_assignment_final_Y = NULL; 
 	free(cluster_centroid); 	
 	cluster_centroid =NULL;
+	free(marks) ;
+	marks=NULL ;
 
 }
 
@@ -1453,6 +1772,10 @@ int main (int argc, char **argv){
 	sprintf (cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
 	//printf ("%s\n", cmd);
 	system(cmd); 
+
+	sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	system(cmd); 
+
 	sleep(1);
 	
 	char * source = argv[1]; 

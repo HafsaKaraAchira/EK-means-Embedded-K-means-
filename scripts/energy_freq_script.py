@@ -39,7 +39,7 @@ pid = 0
 os.sched_setaffinity(0, affinity_mask)
 
 governor = "userspace"
-memory_constraint = [4] #[1,2,4,5,8,10]
+memory_constraint = [1,2,4,5,8,10]
 unit = 100000
 
 
@@ -51,7 +51,7 @@ for MC in reversed(memory_constraint) :
     S=prog_memory_est(N,dim,k,MC)
     os.system("echo $(( "+str(int(S))+" * 1024 * 1024)) > /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes")
     print(str(MC)+"  "+str(int(1024/MC))+"    "+str(S))
-    for freq in [13* unit] : #range(28 * unit, 7 * unit, -unit) :
+    for freq in range(28 * unit, 7 * unit, -unit) :
         os.system("./scripts/prog_script_cache")
         os.system("cpupower -c all frequency-set -f "+str(freq))
         os.system("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed")
