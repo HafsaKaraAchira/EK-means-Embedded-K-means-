@@ -14,9 +14,9 @@ D <- 10 # dimension
 
 ligne_avg_bytes <- D * 17 + (D-1)
 
-folder <- "generator/CM26,8M_4800MO_SEP0,2/"
+folder <- "generator/CM6,7M_1200MO_SEP0,2/"
 
-c <- 2684360 #( signif(size / ligne_avg_bytes , digits = 2) * 1000000 ) / K   # 580000
+c <- 12 #( signif(size / ligne_avg_bytes , digits = 2) * 1000000 ) / K   # 580000
 
 print(c)
 
