@@ -74,7 +74,7 @@ void fail(char *str)
 void save_phase_time(int phase, int step ,int loop , int iteration){
     char *cmd;
 	//printf("iterations=%d",iteration);
-    asprintf(&cmd,"taskset -c 2 ./scripts/prog_script_phase %d %d %d %d",phase,step,loop,iteration);
+    asprintf(&cmd,"taskset -c $(($(nproc) - 1)) ./scripts/prog_script_phase %d %d %d %d",phase,step,loop,iteration);
 	system(cmd);
 	free(cmd) ;
 	cmd=NULL ;
@@ -1603,77 +1603,77 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 			
 		}
 
-		// /****** PHASE 2 : PARTIELS CLUSTERS GROUPING ******/
-		// save_phase_time(2,1,0,0);
-		// groupes = (groupe * ) malloc (sizeof(groupe )*N/taille*k);
-		// nb_groupes =0; 
-		// for (j=0; j< k*N/taille; j++){
-		// 	if (!existG(groupes, nb_groupes, j)){
-		// 		groupes[nb_groupes].means = (int*) malloc(sizeof(int)); 
-		// 		groupes[nb_groupes].nb =1; 		
-		// 		groupes[nb_groupes].means[0]=j; 
-		// 		for ( n = j+1; n<k*N/taille; n++){
-		// 			//condition de non existence
-		// 			if (calc_distance(dim, &cluster_centroid_by_chunk[j*dim], &cluster_centroid_by_chunk[n*dim])<var[j] && !existG(groupes, nb_groupes, n)){
-		// 				groupes[nb_groupes].means = (int *) realloc (groupes[nb_groupes].means, (groupes[nb_groupes].nb+1)*sizeof(int));  	
-		// 				groupes[nb_groupes].means[groupes[nb_groupes].nb] = n; 
-		// 				//printf ("next\n");
-		// 				groupes[nb_groupes].nb++; 
+		/****** PHASE 2 : PARTIELS CLUSTERS GROUPING ******/
+		save_phase_time(2,1,0,0);
+		groupes = (groupe * ) malloc (sizeof(groupe )*N/taille*k);
+		nb_groupes =0; 
+		for (j=0; j< k*N/taille; j++){
+			if (!existG(groupes, nb_groupes, j)){
+				groupes[nb_groupes].means = (int*) malloc(sizeof(int)); 
+				groupes[nb_groupes].nb =1; 		
+				groupes[nb_groupes].means[0]=j; 
+				for ( n = j+1; n<k*N/taille; n++){
+					//condition de non existence
+					if (calc_distance(dim, &cluster_centroid_by_chunk[j*dim], &cluster_centroid_by_chunk[n*dim])<var[j] && !existG(groupes, nb_groupes, n)){
+						groupes[nb_groupes].means = (int *) realloc (groupes[nb_groupes].means, (groupes[nb_groupes].nb+1)*sizeof(int));  	
+						groupes[nb_groupes].means[groupes[nb_groupes].nb] = n; 
+						//printf ("next\n");
+						groupes[nb_groupes].nb++; 
 					
-		// 			}
-		// 		}
-		// 		nb_groupes++; 
-		// 	}
-		// }
+					}
+				}
+				nb_groupes++; 
+			}
+		}
 
-		// save_phase_time(2,1,1,j);
+		save_phase_time(2,1,1,j);
 		
-		// free(cluster_centroid_by_chunk); 
-		// cluster_centroid_by_chunk = NULL;
+		free(cluster_centroid_by_chunk); 
+		cluster_centroid_by_chunk = NULL;
 
-		// save_phase_time(2,2,0,0);
-		// //groups members count update
-		// float count = k*N/taille; 
-		// get_cluster_member_count(((int) (N/taille)) * taille, (int) count, cluster_assignment_final, cluster_member_count);
+		save_phase_time(2,2,0,0);
+		//groups members count update
+		float count = k*N/taille; 
+		get_cluster_member_count(((int) (N/taille)) * taille, (int) count, cluster_assignment_final, cluster_member_count);
 
-		// for (j=0; j<nb_groupes; j++){
-		// 	groupes[j].nb_members = 0; 
-		// 	for (n = 0; n< groupes[j].nb; n++){
-		// 		groupes[j].nb_members+=cluster_member_count[groupes[j].means[n]]; 
-		// 	}
-		// }
+		for (j=0; j<nb_groupes; j++){
+			groupes[j].nb_members = 0; 
+			for (n = 0; n< groupes[j].nb; n++){
+				groupes[j].nb_members+=cluster_member_count[groupes[j].means[n]]; 
+			}
+		}
 
-		// save_phase_time(2,2,1,nb_groupes);
+		save_phase_time(2,2,1,nb_groupes);
 
-		// /****** PHASE 3 : FINAL CHUNK BUILDING ******/
-		// save_phase_time(3,1,0,-1);
-		// double * chunk; 
-		// chunk = form_chunk(groupes,source, marks,cluster_assignment_final, nb_groupes, N, dim,k, taille); 
-		// save_phase_time(3,1,1,-1);
+		/****** PHASE 3 : FINAL CHUNK BUILDING ******/
+		save_phase_time(3,1,0,-1);
+		double * chunk; 
+		chunk = form_chunk(groupes,source, marks,cluster_assignment_final, nb_groupes, N, dim,k, taille); 
+		save_phase_time(3,1,1,-1);
 
-		// free(cluster_assignment_final); 
-		// cluster_assignment_final =NULL; 
-		// for (i = 0; i<nb_groupes; i++){
-		// 	free(groupes[i].means);
-		// 	free(groupes[i].members); 
-		// }
-		// free(groupes); 
-		// groupes = NULL;
+		free(cluster_assignment_final); 
+		cluster_assignment_final =NULL; 
+		for (i = 0; i<nb_groupes; i++){
+			free(groupes[i].means);
+			free(groupes[i].members); 
+		}
+		free(groupes); 
+		groupes = NULL;
 		
-		// /****** PHASE 4 : FINAL CHUNK KMEANS ******/
+		/****** PHASE 4 : FINAL CHUNK KMEANS ******/
 
-		// save_phase_time(4,1,0,-1);
-		// cluster_centroid =kmeans_init_plusplus(chunk, taille, dim, k);
-		// save_phase_time(4,1,1,-1);
+		save_phase_time(4,1,0,-1);
+		cluster_centroid =kmeans_init_plusplus(chunk, taille, dim, k);
+		save_phase_time(4,1,1,-1);
 		
-		// save_phase_time(4,2,0,0);
-		// cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
-		// kmeans(dim,chunk,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations);
-		// save_phase_time(4,2,1,kmeans_iterations);
+		save_phase_time(4,2,0,0);
+		cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
+		kmeans(dim,chunk,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations);
+		save_phase_time(4,2,1,kmeans_iterations);
 
-  		// r8mat_write ("results/centers.csv",dim,k,cluster_centroid) ;
-		// free(chunk);
-		// chunk = NULL;
+  		r8mat_write ("results/centers.csv",dim,k,cluster_centroid) ;
+		free(chunk);
+		chunk = NULL;
 	}
 	else{
 		//sleep(20) ;
@@ -1700,10 +1700,10 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 		X = NULL;
 	}
 
-	// free(cluster_assignment_final_Y);
-	// cluster_assignment_final_Y = NULL; 
-	// free(cluster_centroid); 	
-	// cluster_centroid =NULL;
+	free(cluster_assignment_final_Y);
+	cluster_assignment_final_Y = NULL; 
+	free(cluster_centroid); 	
+	cluster_centroid =NULL;
 	free(marks) ;
 	marks=NULL ;
 
