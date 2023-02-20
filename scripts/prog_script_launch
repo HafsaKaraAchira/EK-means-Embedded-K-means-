@@ -3,13 +3,15 @@
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
     (
-        taskset -c 3 $parent_path/../scripts/prog_script_cpu_io
+        taskset -c 5 $parent_path/../scripts/prog_script_cpu_io
     ) & (
-        taskset -c 4 watch -t -p -n 0.2 $parent_path/../scripts/prog_script_freq
-    ) & (
-        taskset -c 5 watch -t -p -n 1 $parent_path/../scripts/prog_script_sched
+        taskset -c 6 watch -t -p -n 0.2 $parent_path/../scripts/prog_script_freq
     )
+    
+    #  & (
+    #     taskset -c 5 watch -t -p -n 1 $parent_path/../scripts/prog_script_sched
+    # )
 
-    (csvstack $parent_path/../logs/log_frequency.csv $parent_path/../logs/log_cpu_io.csv) | csvsort -c 1 > $parent_path/../logs/temp_merge.csv && csvstack $parent_path/../logs/log_phase.csv $parent_path/../logs/temp_merge.csv > $parent_path/../logs/result_merge.csv
+    # (csvstack $parent_path/../logs/log_frequency.csv $parent_path/../logs/log_cpu_io.csv) | csvsort -c 1 > $parent_path/../logs/temp_merge.csv && csvstack $parent_path/../logs/log_phase.csv $parent_path/../logs/temp_merge.csv > $parent_path/../logs/result_merge.csv
 
-    tail -n+2 $parent_path/../logs/result_merge.csv | DISPLAY=:0 xclip -sel c
+    # tail -n+2 $parent_path/../logs/result_merge.csv | DISPLAY=:0 xclip -sel c
