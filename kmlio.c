@@ -9,8 +9,8 @@ BeagleBone : cd /home/debian/@K-MLIO_Analysis/
 scripts/prog_script_cgroup 1104
 scripts/prog_script_reset
 
-(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && (./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10)
-(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10) & (taskset -c 1 scripts/prog_script_launch))
+(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && (./program generator/CM6,7M_1200MO_SEP0,2/points.csv 10 6710900 1677725 10)
+(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM6,7M_1200MO_SEP0,2/points.csv 10 6710900 1677725 10) & (taskset -c 1 scripts/prog_script_launch))
 
 */
 
@@ -40,7 +40,7 @@ scripts/prog_script_reset
 
 #define MAX_CLUSTERS 100000
 
-#define MAX_ITERATIONS 25 // decrease iterations number for beaglebone overheating issue
+#define MAX_ITERATIONS 35 // decrease iterations number for beaglebone overheating issue
 
 #define BIG_double (INFINITY)
 
@@ -1772,8 +1772,8 @@ int main (int argc, char **argv){
 	//printf ("%s\n", cmd);
 	system(cmd); 
 
-	sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
-	system(cmd); 
+	// sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	// system(cmd); 
 
 	sleep(1);
 	
