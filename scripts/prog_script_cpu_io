@@ -2,9 +2,9 @@
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
-therm_zone=$(cat /sys/class/thermal/thermal_zone*/type | grep -n cpu_thermal | head -c1)
+therm_zone=$( cat /sys/class/thermal/thermal_zone*/type | grep -n cpu_thermal | awk -F: '{print $1}' )
 
-while ! pgrep -x "htop" > /dev/null ; do : ; done
+while ! pgrep -x "program" > /dev/null ; do : ; done
 
 while :
 do
