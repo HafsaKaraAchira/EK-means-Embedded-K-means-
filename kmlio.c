@@ -40,7 +40,7 @@ scripts/prog_script_reset
 
 #define MAX_CLUSTERS 100000
 
-#define MAX_ITERATIONS 150
+#define MAX_ITERATIONS 30
 
 #define BIG_double (INFINITY)
 
@@ -1430,7 +1430,7 @@ double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int *
 	//form chunk
 	while(size < taille){
 	//iterate over groups
-	for ( i=0; i<nb_groupes; i++){
+	for ( i=0; i<nb_groupes; i++){ 
 			//get the elements ratio that can be in chunk for the group
 				c = (float)grp[i].nb_members /(float) N * taille;
 				nb_samples = (int)c; 
