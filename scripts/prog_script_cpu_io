@@ -12,7 +12,7 @@ do
         ( 
             date +%s%3N ; 
             echo "*,*,*,*,*" ;
-            top -b -1 -n 1 -p $(pgrep -d',' program) -e m -E m | tail -1 | awk '{print $2,$3,$4,$5}' ;
+            top -b -n 1 -p $(pgrep -d',' program) | tail -1 | awk '{print $2,$3,$4,$5}' ;
             cat /sys/class/thermal/thermal_zone$((therm_zone -1))/temp ;
             iotop -n2 -qqq -t -k -p $(pgrep -d',' program) | tail -1 | awk '{print $5}';
         )
