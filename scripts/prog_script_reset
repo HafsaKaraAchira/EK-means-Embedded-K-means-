@@ -6,12 +6,11 @@ killall -9 prog_script_cpu_io ;
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
-echo "\"AbsoluteTime\",\"Phase\",\"Step\",\"Loop\",\"Iteration\",\"Frequency\",\"CPU_Usage\",\"RSZ\",\"SWAP\",\"Cumul_pflts\",\"Temperature\",\"Read_Kbps\",\"Write_Kbps\"" | tee $parent_path/../logs/log_frequency.csv $parent_path/../logs/log_phase.csv $parent_path/../logs/log_cpu_io.csv > /dev/null ;
+echo "\"AbsoluteTime\",\"Phase\",\"Step\",\"Loop\",\"Iteration\",\"Change_count\",\"Total_distance\",\"Frequency\",\"CPU_Usage\",\"RSZ\",\"SWAP\",\"Cumul_pflts\",\"Temperature\",\"IO_Kbps\"" | tee $parent_path/../logs/log_frequency.csv $parent_path/../logs/log_phase.csv $parent_path/../logs/log_cpu_io.csv > /dev/null ;
 
-true > $parent_path/../logs/log_sched.csv ;
-
-true > $parent_path/../logs/result_merge.csv ;
-true > $parent_path/../logs/temp_merge.csv ;
+# true > $parent_path/../logs/log_sched.csv ;
+# true > $parent_path/../logs/result_merge.csv ;
+# true > $parent_path/../logs/temp_merge.csv ;
 
 true > $parent_path/../results/centers.csv ;
 true > $parent_path/../results/clusters.csv ;
