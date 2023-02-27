@@ -14,9 +14,9 @@ D <- 10 # dimension
 
 ligne_avg_bytes <- D * 17 + (D-1)
 
-folder <- "generator/CM6,7M_1200MO_SEP0,2/"
+folder <- "generator/CM13,4M_2400MO_SEP-0,6/"
 
-c <- 12 #( signif(size / ligne_avg_bytes , digits = 2) * 1000000 ) / K   # 580000
+c <- 1342180 #( signif(size / ligne_avg_bytes , digits = 2) * 1000000 ) / K   # 580000
 
 print(c)
 
@@ -24,7 +24,7 @@ minmax_scaler <- function(x) {(x - min(x)) / (max(x) - min(x))}
 
 tmp1 <- genRandomClust(
                numClust = K,
-               sepVal = 0.2,
+               sepVal = -0.6,
                numNonNoisy = D,
                clustszind = 1,
                clustSizeEq = c, 
