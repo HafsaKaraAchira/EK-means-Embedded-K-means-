@@ -10,7 +10,8 @@ echo "\"AbsoluteTime\",\"Phase\",\"Step\",\"Loop\",\"Iteration\",\"Change_count\
 
 # true > $parent_path/../logs/log_sched.csv ;
 # true > $parent_path/../logs/result_merge.csv ;
-# true > $parent_path/../logs/temp_merge.csv ;
+
+true > $parent_path/../logs/temp_merge.csv ;
 
 true > $parent_path/../results/centers.csv ;
 true > $parent_path/../results/clusters.csv ;
