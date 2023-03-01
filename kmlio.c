@@ -88,297 +88,6 @@ void save_kmeans_iterations(int phase, int step ,int loop , int iteration,int ch
 	cmd=NULL ;
 }
 
-double *r8mat_data_read ( char *input_filename, int m, int n )
-/******************************************************************************/
-/*
-  Purpose:
-
-    R8MAT_DATA_READ reads the data from an R8MAT file.
-
-  Discussion:
-
-    An R8MAT is an array of R8's.
-
-    The file is assumed to contain one record per line.
-
-    Records beginning with the '#' character are comments, and are ignored.
-    Blank lines are also ignored.
-
-    Each line that is not ignored is assumed to contain exactly (or at least)
-    M real numbers, representing the coordinates of a point.
-
-    There are assumed to be exactly (or at least) N such records.
-
-  Licensing:
-
-    This code is distributed under the GNU LGPL license. 
-
-  Modified:
-
-    27 January 2005
-
-  Author:
-
-    John Burkardt
-
-  Parameters:
-
-    Input, char *INPUT_FILENAME, the name of the input file.
-
-    Input, int M, the number of spatial dimensions.
-
-    Input, int N, the number of points.  The program
-    will stop reading data once N values have been read.
-
-    Output, double R8MAT_DATA_READ[M*N], the data.
-*/
-{
-# define MY_LINE_MAX 255
-
-  int error;
-  char *got_string;
-  FILE *input;
-  int i;
-  int j;
-  char line[255];
-  double *table;
-  double *x;
-
-  input = fopen ( input_filename, "r" );
-
-  if ( !input )
-  {
-    fprintf ( stderr, "\n" );
-    fprintf ( stderr, "R8MAT_DATA_READ - Fatal error!\n" );
-    fprintf ( stderr, "  Could not open the input file: \"%s\"\n", input_filename );
-    exit ( 1 );
-  }
-
-  table = ( double * ) malloc ( m * n * sizeof ( double ) );
-
-  x = ( double * ) malloc ( m * sizeof ( double ) );
-
-  j = 0;
-
-  while ( j < n )
-  {
-    got_string = fgets ( line, MY_LINE_MAX, input );
-
-    if ( !got_string ){break;}
-
-    // if ( line[0] == '#' || s_len_trim ( line ) == 0 ){continue;}
-
-	char delim[3] = "\t" ;
-
-	char *token = strtok(line,delim);
-	i = 0 ;
-	while (token != NULL){
-		x[i] = atof(token); 
-		i++;
-		token = strtok(NULL, delim);
-	}
-
-    //error = s_to_r8vec ( line, m, x );
-
-    //if ( error == 1 ){continue;}
-
-    for ( i = 0; i < m; i++ )
-    {
-      table[i+j*m] = x[i];
-    }
-    j = j + 1;
-
-  }
-
-  fclose ( input );
-
-  free ( x );
-
-  return table;
-
-# undef MY_LINE_MAX
-}
-/******************************************************************************/
- 
-void r8mat_write ( char *output_filename, int m, int n, double table[] )
-
-/******************************************************************************/
-/*
-  Purpose:
-
-    R8MAT_WRITE writes an R8MAT file.
-
-  Discussion:
-
-    An R8MAT is an array of R8's.
-
-  Licensing:
-
-    This code is distributed under the GNU LGPL license. 
-
-  Modified:
-
-    01 June 2009
-
-  Author:
-
-    John Burkardt
-
-  Parameters:
-
-    Input, char *OUTPUT_FILENAME, the output filename.
-
-    Input, int M, the spatial dimension.
-
-    Input, int N, the number of points.
-
-    Input, double TABLE[M*N], the data.
-*/
-{
-  int i;
-  int j;
-  FILE *output;
-/*
-  Open the file.
-*/
-  output = fopen ( output_filename, "at" );
-
-  if ( !output )
-  {
-    fprintf ( stderr, "\n" );
-    fprintf ( stderr, "R8MAT_WRITE - Fatal error!\n" );
-    fprintf ( stderr, "  Could not open the file '%s'.\n", output_filename );
-    exit ( 1 );
-  }
-/*
-  Write the data.
-*/
-  for ( j = 0; j < n; j++ )
-  {
-    for ( i = 0; i < m; i++ )
-    {
-      fprintf ( output, "%2.16f\t", table[i+j*m] ); //%24.16g
-    }
-    fprintf ( output, "\n" );
-  }
-/*
-  Close the file.
-*/
-  fclose ( output );
-
-  return;
-}
-/******************************************************************************/
-
-void i4mat_write ( char *output_filename, int m, int n, int table[] )
-
-/******************************************************************************/
-/*
-  Purpose:
-
-    I4MAT_WRITE writes an I4MAT file.
-
-  Discussion:
-
-    An I4MAT is an array of I4's.
-
-  Licensing:
-
-    This code is distributed under the GNU LGPL license. 
-
-  Modified:
-
-    01 June 2009
-
-  Author:
-
-    John Burkardt
-
-  Parameters:
-
-    Input, char *OUTPUT_FILENAME, the output filename.
-
-    Input, int M, the spatial dimension.
-
-    Input, int N, the number of points.
-
-    Input, int TABLE[M*N], the data.
-*/
-{
-  int i;
-  int j;
-  FILE *output;
-/*
-  Open the file.
-*/
-  output = fopen ( output_filename, "wt" );
-
-  if ( !output )
-  {
-    fprintf ( stderr, "\n" );
-    fprintf ( stderr, "I4MAT_WRITE - Fatal error!\n" );
-    fprintf ( stderr, "  Could not open the output file '%s'\n", output_filename );
-    exit ( 1 );
-  }
-/*
-  Write the data.
-*/
-  for ( j = 0; j < n; j++ )
-  {
-    for ( i = 0; i < m; i++ )
-    {
-      fprintf ( output, "  %d", table[i+j*m] );
-    }
-    fprintf ( output, "\n" );
-  }
-/*
-  Close the file.
-*/
-  fclose ( output );
-
-  return;
-}
-/******************************************************************************/
-
-void rbinmat_write ( char *output_filename, int m, int n, double table[] )
-
-/******************************************************************************/
-/*
-*/
-{
-  int i;
-  int j;
-  FILE *output;
-/*
-  Open the file.
-*/
-  output = fopen ( output_filename, "at" );
-
-  if ( !output )
-  {
-    fprintf ( stderr, "\n" );
-    fprintf ( stderr, "R8MAT_WRITE - Fatal error!\n" );
-    fprintf ( stderr, "  Could not open the file '%s'.\n", output_filename );
-    exit ( 1 );
-  }
-/*
-  Write the data.
-*/
-  for ( j = 0; j < n; j++ )
-  {
-    for ( i = 0; i < m; i++ )
-    {
-      fwrite ( &table[i+j*m],sizeof(double),1,output ); //%24.16g
-    }
-  }
-/*
-  Close the file.
-*/
-  fclose ( output );
-
-  return;
-}
-
 double calc_distance(int dim, double *p1, double *p2)
   {
     double distance_sq_sum = 0;
@@ -688,11 +397,10 @@ int   *cluster_assignment_prev = NULL;
    // free(point_move_score);
   }           
 
-int *mark(char *source, size_t dim, size_t N, int chunk_size){
-	int  * marks= (int *) malloc (sizeof(int)*(N/chunk_size));
+long *mark(char *source, size_t dim, size_t N, int chunk_size){
+	long  * marks= (long *) malloc (sizeof(int)*(N/chunk_size));
 	char line[100000];
-	FILE *src = fopen(source, "r+"); char delim[3]="\t"; 
-	char *token; 
+	FILE *src = fopen(source, "r+");  
 	int j = 0, mark_index =1; 
 	marks[0] = ftell(src); 
 	//printf ("marks[0] = %d\n", marks[0]);
@@ -712,7 +420,7 @@ int *mark(char *source, size_t dim, size_t N, int chunk_size){
 	return marks; 
 }
 
-double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, int * marks){
+double * getmatrix( char * source, size_t dim, size_t N, int sub, int offset, long * marks){
 	FILE *src = fopen(source, "r"); 
 	char line[100000]; 
 	double *X=NULL;
@@ -767,7 +475,7 @@ double * getmatrix_bin( char * source, size_t dim, size_t N, int sub, int offset
 	return X; 
 }
 
-double * getmatrix_mmap( char * source, size_t dim, int k , size_t N, int sub, int offset, int * marks){
+double * getmatrix_mmap( char * source, size_t dim, int k , size_t N, int sub, int offset, long * marks){
 	
 	int src = open (source, O_RDONLY);
 
@@ -783,7 +491,7 @@ double * getmatrix_mmap( char * source, size_t dim, int k , size_t N, int sub, i
 	// calculate the rest size allowed for the chunk kmeans
 	int kmeans_size = (sizeof(double)*k + 2*sizeof(int) + sizeof(int))*sub ;
 	// the size of chunk data in file
-	int chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
+	long chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
 	// the average size of chunk line in file
 	int avg_line_size = ceil(chunk_text_size/(double)sub) ;
 	// the maximum number of lines to store in buffer
@@ -857,12 +565,12 @@ double * getmatrix_mmap( char * source, size_t dim, int k , size_t N, int sub, i
 	return X; 
 }
 
-double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, int offset, int * marks){
+double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, int offset, long * marks){
 	
 	FILE *src = fopen(source, "r"); 
 
 	double *X=NULL;
-	size_t i =0, j=0; 
+	int j=0; 
 	int stop=0; 
 	
 	//decide best buffer size
@@ -904,8 +612,6 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 	j=0; 
 	int L=0 ;
 	int to_read_lines = sub ;
-	int s ;
-	size_t max_len ;
 	
 	while (!feof(src) &&!stop){
 		//allocate buffer size
@@ -914,12 +620,12 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 		L = 0 ;
 		size_t buf_len = 0 ; 
 		while(!feof(src) && L < L_opt){	
-			fgets (line,sizeof(line), src) ;
-			buf[L] = strndup(line,strlen(line)) ;
-			// buf[L] = calloc((strlen(line)+1),sizeof(char)) ;
+			// fgets (line,sizeof(line), src) ;
+			// buf[L] = strndup(line,strlen(line)) ;
+			// buf[L] = calloc(strlen(line),sizeof(char)) ;
 			// strncpy(buf[L],line,strlen(line)) ;
-			buf[L][strlen(line)-1] = '\0' ;
-			buf_len += strlen(line)+1 ;
+			// buf[L][strlen(line)-1] = '\0' ;
+			// buf_len += strlen(line)+1 ;
 			L++ ;
 		}
 		
@@ -933,19 +639,18 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 
 		// convert data strings to matrix values
 		for(int l = 0 ; l<L ; l++){
-			// for(int d = 0 ; d<dim ; d++){
-			// 	X[j] = atof("0"); 
-			// 	j++;
-			// 	// token = strtok(NULL, delim);
-			// }
-			token = strtok(buf[l],delim);
-			while (token != NULL){
-				X[j] = atof(token); 
+			for(int d = 0 ; d<dim ; d++){
+				X[j] = atof("0"); 
 				j++;
-				token = strtok(NULL,delim);
 			}
-			free(buf[l]) ;
-			buf[l]=NULL ;
+			// token = strtok(buf[l],delim);
+			// while (token != NULL){
+			// 	X[j] = atof(token); 
+			// 	j++;
+			// 	token = strtok(NULL,delim);
+			// }
+			// free(buf[l]) ;
+			// buf[l]=NULL ;
 		}
 
 		// printf("stop after fill\n") ;
@@ -955,7 +660,7 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 		if (sub!=0){
 			if ((j/(dim))==sub){
 				stop=1;	
-				s = malloc_trim(0);	
+				malloc_trim(0);	
 			}
 		}		
 	
@@ -968,10 +673,10 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 	
 	fclose(src);
 
-	s = malloc_trim(0);	
+	malloc_trim(0);	
 
-	// printf("stop after free\n") ;
-	// sleep(10) ;
+	printf("stop after free\n") ;
+	sleep(10) ;
 	
 	return X; 
 }
@@ -1294,7 +999,7 @@ void form_index ( int *cluster_assignement, int nb_groupes, groupe *grp, size_t 
 	free(index_grp); 
 } 
 
-double * form_chunk( groupe *grp, /*double *X*/char * source, int * marks, int * cluster_assignment, int nb_groupes, size_t N, size_t dim, int k , size_t taille){
+double * form_chunk( groupe *grp, /*double *X*/char * source, long * marks, int * cluster_assignment, int nb_groupes, size_t N, size_t dim, int k , size_t taille){
 	double * chunk =(double *) malloc (sizeof(double )*(dim*taille)); 
 	int nb_samples; 
 	int j, index_groupe, l, size =0,i, found, m, *int_chunk; 
@@ -1430,7 +1135,7 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 
 	//mark the chunks in dataset
 	save_phase_time(1,1,0,-1);
-	int *marks = mark(source, dim, N, taille);
+	long *marks = mark(source, dim, N, taille);
 	save_phase_time(1,1,1,-1);
 	
 	//apply kmeans on each chunk
@@ -1449,27 +1154,27 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 			// Y = getmatrix_mmap(source, dim,k, taille,taille,i, marks);
 			save_phase_time(1,2,(m+1),-1);	//get matrix complete
 
-			// chunk m init kmeans++ 
-			cluster_centroid = kmeans_init_plusplus(Y, taille, dim, k);
-			save_phase_time(1,3,(m+1),-1);
+			// // chunk m init kmeans++ 
+			// cluster_centroid = kmeans_init_plusplus(Y, taille, dim, k);
+			// save_phase_time(1,3,(m+1),-1);
 
-			//apply kmeans on the chunk m
-			cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
-			kmeans(dim,Y,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations,&kmeans_change_count);
-			save_kmeans_iterations(1,4,(m+1),kmeans_iterations,kmeans_change_count,-1);
+			// //apply kmeans on the chunk m
+			// cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
+			// kmeans(dim,Y,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations,&kmeans_change_count);
+			// save_kmeans_iterations(1,4,(m+1),kmeans_iterations,kmeans_change_count,-1);
 
-			//variance calculation on the chunk m
-			for ( j=0; j<k;j++){
-				var[m*k+j] = var_calculate (Y, dim, cluster_centroid, j, cluster_assignment_final_Y , taille)/taille; 
-			}
-			//copy the centroids to global array
-			for ( j=0; j<k*dim;j++){
-				cluster_centroid_by_chunk[m*k*dim+j] = cluster_centroid[j];   
-			}
-			//copy points clustering to global array
-			for ( n=0 ; n<taille; n++){		
-				cluster_assignment_final[m*taille+n]=cluster_assignment_final_Y[n]+m*k; 
-			}
+			// //variance calculation on the chunk m
+			// for ( j=0; j<k;j++){
+			// 	var[m*k+j] = var_calculate (Y, dim, cluster_centroid, j, cluster_assignment_final_Y , taille)/taille; 
+			// }
+			// //copy the centroids to global array
+			// for ( j=0; j<k*dim;j++){
+			// 	cluster_centroid_by_chunk[m*k*dim+j] = cluster_centroid[j];   
+			// }
+			// //copy points clustering to global array
+			// for ( n=0 ; n<taille; n++){		
+			// 	cluster_assignment_final[m*taille+n]=cluster_assignment_final_Y[n]+m*k; 
+			// }
 			
 			free(Y);
 			Y = NULL;
@@ -1488,100 +1193,100 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 		}
 
 		/****** PHASE 2 : PARTIELS CLUSTERS GROUPING ******/
-		save_phase_time(2,1,0,-1);
-		groupes = (groupe * ) malloc (sizeof(groupe )*N/taille*k);
-		nb_groupes =0; 
-		for (j=0; j< k*N/taille; j++){
-			if (!existG(groupes, nb_groupes, j)){
-				groupes[nb_groupes].means = (int*) malloc(sizeof(int)); 
-				groupes[nb_groupes].nb =1; 		
-				groupes[nb_groupes].means[0]=j; 
-				for ( n = j+1; n<k*N/taille; n++){
-					//condition de non existence
-					if (calc_distance(dim, &cluster_centroid_by_chunk[j*dim], &cluster_centroid_by_chunk[n*dim])<var[j] && !existG(groupes, nb_groupes, n)){
-						groupes[nb_groupes].means = (int *) realloc (groupes[nb_groupes].means, (groupes[nb_groupes].nb+1)*sizeof(int));  	
-						groupes[nb_groupes].means[groupes[nb_groupes].nb] = n; 
-						//printf ("next\n");
-						groupes[nb_groupes].nb++; 
+		// save_phase_time(2,1,0,-1);
+		// groupes = (groupe * ) malloc (sizeof(groupe )*N/taille*k);
+		// nb_groupes =0; 
+		// for (j=0; j< k*N/taille; j++){
+		// 	if (!existG(groupes, nb_groupes, j)){
+		// 		groupes[nb_groupes].means = (int*) malloc(sizeof(int)); 
+		// 		groupes[nb_groupes].nb =1; 		
+		// 		groupes[nb_groupes].means[0]=j; 
+		// 		for ( n = j+1; n<k*N/taille; n++){
+		// 			//condition de non existence
+		// 			if (calc_distance(dim, &cluster_centroid_by_chunk[j*dim], &cluster_centroid_by_chunk[n*dim])<var[j] && !existG(groupes, nb_groupes, n)){
+		// 				groupes[nb_groupes].means = (int *) realloc (groupes[nb_groupes].means, (groupes[nb_groupes].nb+1)*sizeof(int));  	
+		// 				groupes[nb_groupes].means[groupes[nb_groupes].nb] = n; 
+		// 				//printf ("next\n");
+		// 				groupes[nb_groupes].nb++; 
 					
-					}
-				}
-				nb_groupes++; 
-			}
-		}
+		// 			}
+		// 		}
+		// 		nb_groupes++; 
+		// 	}
+		// }
 
-		save_phase_time(2,1,1,j);
+		// save_phase_time(2,1,1,j);
 		
 		free(cluster_centroid_by_chunk); 
 		cluster_centroid_by_chunk = NULL;
 
-		save_phase_time(2,2,0,-1);
-		//groups members count update
-		float count = k*N/taille; 
-		get_cluster_member_count(((int) (N/taille)) * taille, (int) count, cluster_assignment_final, cluster_member_count);
+		// save_phase_time(2,2,0,-1);
+		// //groups members count update
+		// float count = k*N/taille; 
+		// get_cluster_member_count(((int) (N/taille)) * taille, (int) count, cluster_assignment_final, cluster_member_count);
 
-		for (j=0; j<nb_groupes; j++){
-			groupes[j].nb_members = 0; 
-			for (n = 0; n< groupes[j].nb; n++){
-				groupes[j].nb_members+=cluster_member_count[groupes[j].means[n]]; 
-			}
-		}
+		// for (j=0; j<nb_groupes; j++){
+		// 	groupes[j].nb_members = 0; 
+		// 	for (n = 0; n< groupes[j].nb; n++){
+		// 		groupes[j].nb_members+=cluster_member_count[groupes[j].means[n]]; 
+		// 	}
+		// }
 
-		save_phase_time(2,2,1,nb_groupes);
+		// save_phase_time(2,2,1,nb_groupes);
 
 		/****** PHASE 3 : FINAL CHUNK BUILDING ******/
-		save_phase_time(3,1,0,-1);
-		double * chunk; 
-		chunk = form_chunk(groupes,source, marks,cluster_assignment_final, nb_groupes, N, dim,k, taille); 
-		save_phase_time(3,1,1,-1);
+		// save_phase_time(3,1,0,-1);
+		// double * chunk; 
+		// chunk = form_chunk(groupes,source, marks,cluster_assignment_final, nb_groupes, N, dim,k, taille); 
+		// save_phase_time(3,1,1,-1);
 
 		free(cluster_assignment_final); 
 		cluster_assignment_final =NULL; 
-		for (i = 0; i<nb_groupes; i++){
-			free(groupes[i].means);
-			free(groupes[i].members); 
-		}
-		free(groupes); 
-		groupes = NULL;
+		// for (i = 0; i<nb_groupes; i++){
+		// 	free(groupes[i].means);
+		// 	free(groupes[i].members); 
+		// }
+		// free(groupes); 
+		// groupes = NULL;
 		
 		/****** PHASE 4 : FINAL CHUNK KMEANS ******/
 
-		save_phase_time(4,1,0,-1);
-		cluster_centroid =kmeans_init_plusplus(chunk, taille, dim, k);
-		save_phase_time(4,1,1,-1);
+		// save_phase_time(4,1,0,-1);
+		// cluster_centroid =kmeans_init_plusplus(chunk, taille, dim, k);
+		// save_phase_time(4,1,1,-1);
 		
-		save_phase_time(4,2,0,-1);
-		cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
-		kmeans(dim,chunk,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations,&kmeans_change_count);
-		save_kmeans_iterations(4,2,1,kmeans_iterations,kmeans_change_count,-1);
+		// save_phase_time(4,2,0,-1);
+		// cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
+		// kmeans(dim,chunk,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations,&kmeans_change_count);
+		// save_kmeans_iterations(4,2,1,kmeans_iterations,kmeans_change_count,-1);
 
-  		r8mat_write ("results/centers.csv",dim,k,cluster_centroid) ;
-		free(chunk);
-		chunk = NULL;
+  		// r8mat_write ("results/centers.csv",dim,k,cluster_centroid) ;
+		// free(chunk);
+		// chunk = NULL;
 	}
 	else{
-		//sleep(20) ;
-		save_phase_time(2,1,0,-1);
-		double* X; 
-		// X = getmatrix(source, dim, N,N,0, marks );
-		// rbinmat_write ("points_bin.csv",dim,N,X) ;
-		// X = getmatrix_mmap(source, dim,k,N,N,0,marks);
-		// X = getmatrix_bin(source,dim,N,N,0); 
+		// //sleep(20) ;
+		// save_phase_time(2,1,0,-1);
+		// double* X; 
+		// // X = getmatrix(source, dim, N,N,0, marks );
+		// // rbinmat_write ("points_bin.csv",dim,N,X) ;
+		// // X = getmatrix_mmap(source, dim,k,N,N,0,marks);
+		// // X = getmatrix_bin(source,dim,N,N,0); 
 
-		X = getmatrix_buf(source, dim,k, N,N,0, marks);
-		save_phase_time(2,1,1,-1);
+		// X = getmatrix_buf(source, dim,k, N,N,0, marks);
+		// save_phase_time(2,1,1,-1);
 
-		save_phase_time(2,2,0,-1);
-		cluster_centroid =kmeans_init_plusplus(X, N, dim, k);
-		save_phase_time(2,2,1,-1);
+		// save_phase_time(2,2,0,-1);
+		// cluster_centroid =kmeans_init_plusplus(X, N, dim, k);
+		// save_phase_time(2,2,1,-1);
 
-		save_phase_time(2,3,0,-1);	
-		cluster_assignment_final=  (int *) malloc(N*sizeof(int)); 
-		kmeans(dim,X,N, k, cluster_centroid, cluster_assignment_final,&kmeans_iterations,&kmeans_change_count);
-		save_kmeans_iterations(2,3,1,kmeans_iterations,kmeans_change_count,-1);
+		// save_phase_time(2,3,0,-1);	
+		// cluster_assignment_final=  (int *) malloc(N*sizeof(int)); 
+		// kmeans(dim,X,N, k, cluster_centroid, cluster_assignment_final,&kmeans_iterations,&kmeans_change_count);
+		// save_kmeans_iterations(2,3,1,kmeans_iterations,kmeans_change_count,-1);
 
-		free(X);
-		X = NULL;
+		// free(X);
+		// X = NULL;
 	}
 
 	free(cluster_assignment_final_Y);
