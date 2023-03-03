@@ -573,98 +573,62 @@ int assignment_change_count(int n, int a[], int b[])
 
 void kmeans(
             int  dim,		                     // dimension of data 
-
             double *X,                        // pointer to data
             int   n,                         // number of elements
-            
             int   k,                         // number of clusters
             double *cluster_centroid,         // initial cluster centroids
             int   *cluster_assignment_final,  // output
 			int *batch_iteration
            )
-  {
+{
    	
-   double *dist                    = (double *)malloc(sizeof(double) * n * k);
-int   *cluster_assignment_prev = NULL; 
-   cluster_assignment_prev = (int *)malloc(sizeof(int) * n);
-   int   *cluster_assignment_cur  = NULL; 
-   cluster_assignment_cur = (int *)malloc(sizeof(int) * n);
-   
- //   double *point_move_score        = NULL;//(double *)malloc(sizeof(double) * n * k);
+   	double *dist = (double *)malloc(sizeof(double) * n * k);
+	int *cluster_assignment_prev = NULL; 
+   	cluster_assignment_prev = (int *)malloc(sizeof(int) * n);
+   	int *cluster_assignment_cur = NULL; 
+   	cluster_assignment_cur = (int *)malloc(sizeof(int) * n);
     
-    //if (!dist || !cluster_assignment_cur || !cluster_assignment_prev /*|| !point_move_score*/)
-      //fail("Error allocating dist arrays");
-    
-   // initial setup  
+   	// initial setup  
     calc_all_distances(dim, n, k, X, cluster_centroid, dist);
     choose_all_clusters_from_distances(dim, n, k, dist, cluster_assignment_cur);
     copy_assignment_array(n, cluster_assignment_cur, cluster_assignment_prev);
 
-   // BATCH UPDATE
+   	// BATCH UPDATE
     double prev_totD = BIG_double;
     (*batch_iteration) = 0;
     while ((*batch_iteration) < MAX_ITERATIONS)
-      {
-	 
-//	printf("batch iteration %d \n", batch_iteration);
-//        cluster_diag(dim, n, k, X, cluster_assignment_cur, cluster_centroid);
-        
+    { 
         // update cluster centroids
          calc_cluster_centroids(dim, n, k, X, cluster_assignment_cur, cluster_centroid);
-
-        // deal with empty clusters
-        // XXXXXXXXXXXXXX
-
         // see if we've failed to improve
          double totD = calc_total_distance(dim, n, k, X, cluster_centroid, cluster_assignment_cur);
          if (totD > prev_totD)
           // failed to improve - currently solution worse than previous
-           {
+        {
             // restore old assignments
-             copy_assignment_array(n, cluster_assignment_prev, cluster_assignment_cur);
-             
+            copy_assignment_array(n, cluster_assignment_prev, cluster_assignment_cur);
             // recalc centroids
-             calc_cluster_centroids(dim, n, k, X, cluster_assignment_cur, cluster_centroid);
-             
-           //  printf("  negative progress made on this step - iteration completed (%.2f) \n", totD - prev_totD);
-             
+            calc_cluster_centroids(dim, n, k, X, cluster_assignment_cur, cluster_centroid);
             // done with this phase
              break;
            }
            
         // save previous step
-         copy_assignment_array(n, cluster_assignment_cur, cluster_assignment_prev);
-         
-        // move all points to nearest cluster
-         calc_all_distances(dim, n, k, X, cluster_centroid, dist);
-         choose_all_clusters_from_distances(dim, n, k, dist, cluster_assignment_cur);
-         
-         int change_count = assignment_change_count(n, cluster_assignment_cur, cluster_assignment_prev);
-         
-        // printf("%3d   %u   %9d  %16.2f %17.2f\n", batch_iteration, 1, change_count, totD, totD - prev_totD);
-         fflush(stdout);
-         
+        copy_assignment_array(n, cluster_assignment_cur, cluster_assignment_prev);
+        // recalculate points centers distance matrix 
+        calc_all_distances(dim, n, k, X, cluster_centroid, dist);
+		// move all points to nearest cluster
+        choose_all_clusters_from_distances(dim, n, k, dist, cluster_assignment_cur);
+		//  get the change made to points
+        int change_count = assignment_change_count(n, cluster_assignment_cur, cluster_assignment_prev);
         // done with this phase if nothing has changed
-         if (change_count == 0)
-           {
-		
-//		printf ("ook\n"); 
-            // printf("  no change made on this step - iteration completed \n");
-             break;
-           }
-
-         prev_totD = totD;
+        if (change_count == 0){	break;	}
+        prev_totD = totD;
                         
-         (*batch_iteration)++;
-      }
-
-//cluster_diag(dim, n, k, X, cluster_assignment_cur, cluster_centroid);
-
-
+        (*batch_iteration)++;
+    }
       
-    //printf("iterations: %3d  \n", batch_iteration/*, online_iteration*/);
-      
-   // write to output array
+   	// write to output array
     copy_assignment_array(n, cluster_assignment_cur, cluster_assignment_final);    
     free(dist);
     dist = NULL; 
@@ -672,8 +636,7 @@ int   *cluster_assignment_prev = NULL;
     cluster_assignment_cur = NULL; 
     free(cluster_assignment_prev);
     cluster_assignment_prev = NULL;
-   // free(point_move_score);
-  }           
+}           
 
 int *mark(char *source, size_t dim, size_t N, int chunk_size){
 	int  * marks= (int *) malloc (sizeof(int)*(N/chunk_size));
