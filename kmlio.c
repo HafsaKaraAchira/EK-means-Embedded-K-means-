@@ -907,7 +907,7 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 	int s ;
 	size_t max_len ;
 	
-	while (!feof(src) &&!stop){
+	while (!stop){
 		//allocate buffer size
 		if(L_opt>to_read_lines)	L_opt = to_read_lines ;
 		// fill the buffer as much as possible
@@ -915,11 +915,11 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 		size_t buf_len = 0 ; 
 		while(!feof(src) && L < L_opt){	
 			fgets (line,sizeof(line), src) ;
-			buf[L] = strndup(line,strlen(line)) ;
-			// buf[L] = calloc((strlen(line)+1),sizeof(char)) ;
-			// strncpy(buf[L],line,strlen(line)) ;
+			// buf[L] = strndup(line,strlen(line)) ;
+			buf[L] = calloc(strlen(line),sizeof(char)) ;
+			strncpy(buf[L],line,strlen(line)) ;
 			buf[L][strlen(line)-1] = '\0' ;
-			buf_len += strlen(line)+1 ;
+			// buf_len += strlen(line) ;
 			L++ ;
 		}
 		
@@ -934,9 +934,8 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 		// convert data strings to matrix values
 		for(int l = 0 ; l<L ; l++){
 			// for(int d = 0 ; d<dim ; d++){
-			// 	X[j] = atof("0"); 
-			// 	j++;
-			// 	// token = strtok(NULL, delim);
+			// 	X[j] = 0 ; 
+			//  	j++;
 			// }
 			token = strtok(buf[l],delim);
 			while (token != NULL){
@@ -947,7 +946,8 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 			free(buf[l]) ;
 			buf[l]=NULL ;
 		}
-
+		
+		// s = malloc_trim(0);	
 		// printf("stop after fill\n") ;
 		// sleep(15) ;
 
@@ -955,7 +955,7 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 		if (sub!=0){
 			if ((j/(dim))==sub){
 				stop=1;	
-				s = malloc_trim(0);	
+				
 			}
 		}		
 	
@@ -1657,8 +1657,8 @@ int main (int argc, char **argv){
 	//printf ("%s\n", cmd);
 	system(cmd); 
 
-	sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
-	system(cmd); 
+	// sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	// system(cmd); 
 
 	sleep(1);
 	
