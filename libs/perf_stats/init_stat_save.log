@@ -1,0 +1,212 @@
+
+#######################################
+#######################################
+#######################################
+
+ Performance counter stats for process id '10114':
+
+         16,858.47 msec task-clock                #    1.000 CPUs utilized          
+               140      context-switches          #    8.304 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+                 0      page-faults               #    0.000 /sec                   
+    38,616,657,208      cycles                    #    2.291 GHz                      (75.00%)
+   117,410,793,356      instructions              #    3.04  insn per cycle           (74.99%)
+     4,942,689,352      branches                  #  293.187 M/sec                    (75.00%)
+        16,675,187      branch-misses             #    0.34% of all branches          (75.00%)
+
+      16.860945263 seconds time elapsed
+
+#######################################
+#######################################
+
+ Performance counter stats for process id '10887':
+
+         17,141.59 msec task-clock                #    1.000 CPUs utilized          
+               123      context-switches          #    7.176 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+                 0      page-faults               #    0.000 /sec                   
+    39,266,130,607      cycles                    #    2.291 GHz                      (75.01%)
+   120,283,931,089      instructions              #    3.06  insn per cycle           (75.01%)
+     5,068,386,370      branches                  #  295.678 M/sec                    (75.01%)
+        16,904,962      branch-misses             #    0.33% of all branches          (74.97%)
+
+      17.143766296 seconds time elapsed
+
+#######################################
+#######################################
+
+
+ Performance counter stats for process id '12865':
+
+         17,063.40 msec task-clock                #    1.000 CPUs utilized          
+               155      context-switches          #    9.084 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+                 0      page-faults               #    0.000 /sec                   
+    39,085,952,238      cycles                    #    2.291 GHz                      (74.99%)
+   118,981,011,008      instructions              #    3.04  insn per cycle           (75.01%)
+     4,938,353,600      branches                  #  289.412 M/sec                    (75.02%)
+        14,197,996      branch-misses             #    0.29% of all branches          (74.98%)
+
+      17.066073077 seconds time elapsed
+
+
+
+
+ Performance counter stats for process id '13682':
+
+         16,843.61 msec task-clock                #    1.000 CPUs utilized          
+               160      context-switches          #    9.499 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+                 0      page-faults               #    0.000 /sec                   
+    38,584,006,352      cycles                    #    2.291 GHz                      (75.00%)
+   118,886,659,872      instructions              #    3.08  insn per cycle           (74.99%)
+     4,931,687,654      branches                  #  292.793 M/sec                    (75.00%)
+        14,135,106      branch-misses             #    0.29% of all branches          (75.01%)
+
+      16.846333159 seconds time elapsed
+
+
+
+ Performance counter stats for process id '16240':
+
+         16,719.03 msec task-clock                #    1.000 CPUs utilized          
+               122      context-switches          #    7.297 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+                 0      page-faults               #    0.000 /sec                   
+    38,293,757,204      cycles                    #    2.290 GHz                      (75.01%)
+   117,135,840,806      instructions              #    3.06  insn per cycle           (75.00%)
+     4,856,457,739      branches                  #  290.475 M/sec                    (75.00%)
+        14,161,558      branch-misses             #    0.29% of all branches          (74.99%)
+
+      16.721223914 seconds time elapsed
+
+
+ Performance counter stats for process id '16683':
+
+         16,610.35 msec task-clock                #    1.000 CPUs utilized          
+               163      context-switches          #    9.813 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+                 0      page-faults               #    0.000 /sec                   
+    38,048,488,880      cycles                    #    2.291 GHz                      (74.99%)
+   117,249,436,392      instructions              #    3.08  insn per cycle           (75.01%)
+     4,867,219,876      branches                  #  293.023 M/sec                    (75.00%)
+        14,123,531      branch-misses             #    0.29% of all branches          (75.00%)
+
+      16.613034249 seconds time elapsed
+
+#######################################
+#######################################
+#######################################
+#######################################
+#######################################
+#######################################
+
+Problems finding threads of monitor
+
+ Usage: perf stat [<options>] [<command>]
+
+    -p, --pid <pid>       stat events on existing process id
+    -t, --tid <tid>       stat events on existing thread id
+
+ Performance counter stats for process id '20159':
+
+          7,744.31 msec task-clock                #    0.967 CPUs utilized          
+               155      context-switches          #   20.015 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+            43,176      page-faults               #    5.575 K/sec                  
+    21,651,200,472      cycles                    #    2.796 GHz                      (11.51%)
+    65,391,789,233      instructions              #    3.02  insn per cycle           (11.55%)
+     2,960,809,491      branches                  #  382.320 M/sec                    (11.54%)
+        11,844,332      branch-misses             #    0.40% of all branches          (11.42%)
+
+       8.007019957 seconds time elapsed
+
+
+ Performance counter stats for process id '20159':
+
+          9,699.86 msec task-clock                #    0.969 CPUs utilized          
+               208
+      context-switches          #   21.444 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+            58,259      page-faults               #    6.006 K/sec                  
+    26,980,237,588      cycles                    #    2.782 GHz                      (12.18%)
+    80,901,642,897      instructions              #    3.00  insn per cycle           (12.26%)
+     3,629,764,613      branches                  #  374.208 M/sec                    (12.20%)
+        13,133,365      branch-misses             #    0.36% of all branches          (12.18%)
+
+      10.007150617 seconds time elapsed
+
+
+ Performance counter stats for process id '20159':
+
+         12,687.37 msec task-clock                #    0.975 CPUs utilized          
+               301      context-switches          #   23.724 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+            88,398      page-faults               #    6.967 K/sec                  
+    35,491,188,856      cycles                    #    2.797 GHz                      (14.43%)
+   106,030,131,098      instructions              #    2.99  insn per cycle           (14.58%)
+     4,741,244,259      branches                  #  373.698 M/sec                    (14.67%)
+        14,601,853      branch-misses             #    0.31% of all branches          (14.63%)
+
+      13.010279805 seconds time elapsed
+
+
+ Performance counter stats for process id '20159':
+
+          5,489.25 msec task-clock                #    0.914 CPUs utilized          
+                97      context-switches          #   17.671 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+            28,168      page-faults               #    5.131 K/sec                  
+    15,384,963,515      cycles                    #    2.803 GHz                      (10.61%)
+    45,718,516,151      instructions              #    2.97  insn per cycle           (10.60%)
+     1,895,835,055      branches                  #  345.372 M/sec                    (10.60%)
+        10,676,832      branch-misses             #    0.56% of all branches          (10.61%)
+
+       6.004768321 seconds time elapsed
+
+
+ Performance counter stats for process id '20159':
+
+         13,429.82 msec task-clock                #    0.958 CPUs utilized          
+               343      context-switches          #   25.540 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+            99,489      page-faults               #    7.408 K/sec                  
+    37,190,451,478      cycles                    #    2.769 GHz                      (15.98%)
+   111,560,277,733      instructions              #    3.00  insn per cycle           (15.89%)
+     4,961,806,489      branches                  #  369.462 M/sec                    (15.74%)
+        13,368,290      branch-misses             #    0.27% of all branches          (15.66%)
+
+      14.011917932 seconds time elapsed
+
+
+ Performance counter stats for process id '20159':
+
+         13,429.82 msec task-clock                #    0.958 CPUs utilized          
+               343      context-switches          #   25.540 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+            99,489      page-faults               #    7.408 K/sec                  
+    37,518,086,575      cycles                    #    2.794 GHz                      (15.78%)
+   111,966,955,452      instructions              #    2.98  insn per cycle           (15.77%)
+     4,883,576,407      branches                  #  363.637 M/sec                    (15.83%)
+        13,487,209      branch-misses             #    0.28% of all branches          (16.04%)
+
+      14.013348089 seconds time elapsed
+
+
+ Performance counter stats for process id '20159':
+
+         11,345.61 msec task-clock                #    0.945 CPUs utilized          
+               255      context-switches          #   22.476 /sec                   
+                 0      cpu-migrations            #    0.000 /sec                   
+            73,355      page-faults               #    6.465 K/sec                  
+    31,505,907,974      cycles                    #    2.777 GHz                      (13.15%)
+    93,732,675,818      instructions              #    2.98  insn per cycle           (13.32%)
+     4,025,457,076      branches                  #  354.803 M/sec                    (13.33%)
+        13,189,953      branch-misses             #    0.33% of all branches          (13.28%)
+
+      12.009222718 seconds time elapsed
+
+
+////////////////////////////////
+
+

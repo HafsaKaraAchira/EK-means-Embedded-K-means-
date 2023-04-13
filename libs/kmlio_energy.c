@@ -66,7 +66,6 @@ void save_phase_time(int phase, int step ,int loop , int iteration){
     char *cmd;
     asprintf(&cmd,"taskset -c 2 ./scripts/prog_script_phase %d %d %d %d",phase,step,loop,iteration);
 	system(cmd);
-	free(cmd);
 }
 
 double *r8mat_data_read ( char *input_filename, int m, int n )

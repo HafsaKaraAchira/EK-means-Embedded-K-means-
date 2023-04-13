@@ -1,10 +1,10 @@
 #!/bin/bash
 
 mkdir -p /sys/fs/cgroup/memory/kmeans
-mkdir -p /sys/fs/cgroup/blkio/kmeans
+sysctl vm.swappiness=10
+echo 10 > /sys/fs/cgroup/memory/kmeans/memory.swappiness
 echo $(($1 * 1024 * 1024)) > /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes
-echo "8:0 $(($2 * 1024 * 1024))" > /sys/fs/cgroup/blkio/kmeans/blkio.throttle.read_bps_device
 cat /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes
-cat /sys/fs/cgroup/blkio/kmeans/blkio.throttle.read_bps_device
+cat /sys/fs/cgroup/memory/kmeans/memory.swappiness
 
 # 

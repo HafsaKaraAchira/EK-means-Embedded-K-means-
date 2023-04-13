@@ -1,3 +1,5 @@
 generator/CM*
 points*.csv
+git-old
+.git-old
 generator/*/

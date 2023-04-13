@@ -12,6 +12,9 @@ K <- 10 # clusters
 Dim <- 10 # dimension
 # c <- 134218   # cluster points number
 # sepvalue <- 0.4   # sep value
+Dim <- 10 # dimension
+# c <- 134218   # cluster points number
+# sepvalue <- 0.4   # sep value
 
 for( c in c(1342180) ) {    # 134218,1677725,335545,671090,1342180,2013270,2684360
     for( sepvalue in c(3) ) {
@@ -37,13 +40,35 @@ for( c in c(1342180) ) {    # 134218,1677725,335545,671090,1342180,2013270,26843
         print("data generated done")
 
     #####################################################################################################
+        print("data generated done")
 
+    #####################################################################################################
+
+        data <- read_delim(paste(folder, "datapoints_1.dat", sep = "")," ",col_names= TRUE)
+        print("data read done")
         data <- read_delim(paste(folder, "datapoints_1.dat", sep = "")," ",col_names= TRUE)
         print("data read done")
 
         data_norm <- minmax_scaler(data)
         print("data norm done")
+        data_norm <- minmax_scaler(data)
+        print("data norm done")
 
+        data_norm$cluster <- read_delim(paste(folder, "datapoints_1.mem", sep = "")," ",col_names= FALSE) - 1
+        print("data clusters read done") 
+
+        head(data_norm$cluster)
+
+        data_shuffle <- data_norm[sample(1:nrow(data_norm)), ]
+        print("data shuffle done")
+
+        write_delim(data.frame(data_shuffle[,c(Dim+1)]),paste(folder, "real_classes.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
+        print("data clusters write done")
+     
+        write_delim(data.frame(data_shuffle[,c(1:Dim)]),paste(folder, "points.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
+        print("data norm write done")
+    }
+}
         data_norm$cluster <- read_delim(paste(folder, "datapoints_1.mem", sep = "")," ",col_names= FALSE) - 1
         print("data clusters read done") 
 
@@ -78,6 +103,10 @@ write.table(original_centres_norm,paste(folder,"real_centres_norm.csv",sep=""),q
 
 # plot(x = data_norm$x1, y = data_norm$x2, xlab = "x1", ylab = "x2", col = rainbow(10)[clusters$V1], pch = 4, main = "clusters")
 
+# clusters <- read.table(paste(folder,"datapoints_1.mem",sep=""), header = FALSE,  sep = "\t",  stringsAsFactors = FALSE)
+# head(clusters)
+# points <- read.table("./results/points.csv", header = FALSE,  sep = "\t",  stringsAsFactors = FALSE)
+# write.table(data_norm,paste(folder, "points.csv", sep = ""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
 # clusters <- read.table(paste(folder,"datapoints_1.mem",sep=""), header = FALSE,  sep = "\t",  stringsAsFactors = FALSE)
 # head(clusters)
 # points <- read.table("./results/points.csv", header = FALSE,  sep = "\t",  stringsAsFactors = FALSE)

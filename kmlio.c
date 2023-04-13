@@ -9,7 +9,7 @@ BeagleBone : cd /home/debian/@K-MLIO_Analysis/
 scripts/prog_script_cgroup 1104
 scripts/prog_script_reset
 
-(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && (./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10)
+(scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/10D/13421800N/SEP0.2/points.csv 10 13421800 6710900 10)  & (taskset -c 1 scripts/prog_script_launch))
 (scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10) & (taskset -c 1 scripts/prog_script_launch))
 
 */
@@ -40,7 +40,7 @@ scripts/prog_script_reset
 
 #define MAX_CLUSTERS 100000
 
-#define MAX_ITERATIONS 150
+#define MAX_ITERATIONS 10
 
 #define BIG_double (INFINITY)
 
@@ -322,7 +322,7 @@ int   *cluster_assignment_prev = NULL;
     double prev_totD = BIG_double;
     (*batch_iteration) = 0;
 
-	save_kmeans_iterations(-1,-1,chunk_ind,-1,-1,-1);
+	// save_kmeans_iterations(-1,-1,chunk_ind,-1,-1,-1);
 
     while ((*batch_iteration) < MAX_ITERATIONS)
       {
@@ -376,7 +376,7 @@ int   *cluster_assignment_prev = NULL;
 
          prev_totD = totD;
 
-		 save_kmeans_iterations(-1,-1,chunk_ind,(*batch_iteration),change_count,totD) ;                
+		//  save_kmeans_iterations(-1,-1,chunk_ind,(*batch_iteration),change_count,totD) ;                
          (*batch_iteration)++;
       }
 
@@ -585,17 +585,18 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 	char line[MAX_LINE_SIZE+1];
 	
 	// calculate the rest size allowed for the chunk kmeans
-	int kmeans_size = (sizeof(double)*k + 3*sizeof(int))*sub ;
+	long kmeans_size = (sizeof(double)*k + 3*sizeof(int))*sub ;
 	
 	// the size of chunk data in file
-	int chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
+	long chunk_text_size = marks[(offset/sub)+1] - marks[offset/sub] ;
+	// printf("mark end = %ld , mark begin = %ld , chunk size = %ld , km size = %ld\n",marks[(offset/sub)+1],marks[offset/sub],chunk_text_size,kmeans_size) ;
 	// the average size of chunk line in file
-	int avg_line_size = ceil(chunk_text_size/(double)sub) ;
+	long avg_line_size = ceil(chunk_text_size/(double)sub) ;
 	
 	// the maximum number of lines to store in buffer
-	int L_max = kmeans_size/(avg_line_size+1+sizeof(char *)) ;
+	long L_max = kmeans_size/(avg_line_size+1+sizeof(char *)) ;
 	// ajust the number of lines in buffer 
-	int it_num = ceil((double)sub/L_max) ;
+	long it_num = ceil((double)sub/L_max) ;
 	// balance the number of read lines in each iteration
 	int L_opt = ceil((double)sub / it_num) ;
 	
@@ -619,7 +620,7 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 	int L=0 ;
 	int to_read_lines = sub ;
 	
-	while (!feof(src) &&!stop){
+	while (!stop){
 		//allocate buffer size
 		if(L_opt>to_read_lines)	L_opt = to_read_lines ;
 		// fill the buffer as much as possible
@@ -636,9 +637,9 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 		}
 		
 		// printf("stop after read\n") ;
-		// sleep(15) ;
+		sleep(10) ;
 
-		printf("Lmax = %d \tLopt = %d \tL = %d \tread lines = %ld \tmax line size = %ld \tstrings real size %f MB + buffer pointers size %f MB\n",L_max,L_opt, L,(j/(dim)),avg_line_size+1+sizeof(char *),buf_len/pow(1024,2),(L_opt*sizeof(char*))/pow(1024,2)) ;
+		// printf("Lmax = %ld \tLopt = %ld \tL = %ld \tread lines = %ld \tavg line size = %ld \tstrings real size %f MB + buffer pointers size %f MB\n",L_max,L_opt, L,(j/(dim)),avg_line_size+1+sizeof(char *),buf_len/pow(1024,2),(L_opt*sizeof(char*))/pow(1024,2)) ;
 		
 		L=L_opt ;
 		to_read_lines -= L ;
@@ -658,7 +659,8 @@ double * getmatrix_buf( char * source, size_t dim, int k , size_t N, int sub, in
 			free(buf[l]) ;
 			// buf[l]=NULL ;
 		}
-
+		
+		// s = malloc_trim(0);	
 		// printf("stop after fill\n") ;
 		// sleep(15) ;
 
@@ -1074,10 +1076,8 @@ double * form_chunk( groupe *grp, /*double *X*/char * source, long * marks, int 
 	//iterate over chunk points
 	for (i=0; i<N/taille;i++){
 		if (index[i].element!=-1){
-			Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
-			// printf("test after before matrix\n") ;
-			// Y = getmatrix_buf(source, dim,k, taille,taille,i*taille, marks); 
-			// printf("test after get matrix\n") ;
+			// Y = getmatrix(source, dim, taille,taille,i*taille, marks); 
+			Y = getmatrix_buf(source, dim,k,N,taille,i*taille, marks); 
 			//printf ("chunk %d\n", i); 
 			for (j=0; j<dim;j++){
 				chunk[size*dim+j] = Y[index[i].element*dim+j]; 
@@ -1179,6 +1179,7 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 	//mark the chunks in dataset
 	save_phase_time(1,1,0,-1);
 	long *marks = mark(source, dim, N, taille);
+	long *marks = mark(source, dim, N, taille);
 	save_phase_time(1,1,1,-1);
 	
 	//apply kmeans on each chunk
@@ -1191,8 +1192,8 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 		for( m = 0; m<N/taille; m++){
 			//lecture du chunk 
 			i = m*taille;
-			// Y = getmatrix_buf(source, dim,k, taille,taille,i, marks); 
-			Y = getmatrix(source, dim,taille,taille,i, marks); 
+			Y = getmatrix_buf(source, dim,k,N,taille,i, marks); 
+			// Y = getmatrix(source, dim,taille,taille,i, marks); 
 			// Y = getmatrix_bin(source, dim,taille,taille,i); 
 			// Y = getmatrix_mmap(source, dim,k, taille,taille,i, marks);
 			save_phase_time(1,2,(m+1),-1);	//get matrix complete
@@ -1204,9 +1205,9 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 			//apply kmeans on the chunk m
 			cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
 			kmeans(dim,Y,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations,&kmeans_change_count);
-			sprintf (cmd,"printf %%s \"%u + \" >> logs/%ldD/%dN/log_iterations_%d.csv",kmeans_iterations,dim,N,(int)N/taille);
-			system(cmd);  
-			save_kmeans_iterations(1,4,(m+1),kmeans_iterations,kmeans_change_count,-1);
+			// sprintf (cmd,"printf %%s \"%u + \" >> logs/%ldD/%dN/log_iterations_%d.csv",kmeans_iterations,dim,N,(int)N/taille);
+			// system(cmd);  
+			// save_kmeans_iterations(1,4,(m+1),kmeans_iterations,kmeans_change_count,-1);
 
 			//variance calculation on the chunk m
 			for ( j=0; j<k;j++){
@@ -1304,9 +1305,9 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 		save_phase_time(4,2,0,-1);
 		cluster_assignment_final_Y=  (int *) malloc(taille*sizeof(int));
 		kmeans(dim,chunk,taille, k, cluster_centroid, cluster_assignment_final_Y,&kmeans_iterations,&kmeans_change_count);
-		sprintf (cmd,"printf %%s \"%u\n\" >> logs/%ldD/%dN/log_iterations_%d.csv",kmeans_iterations,dim,N,(int)N/taille);
-		system(cmd); 
-		save_kmeans_iterations(4,2,1,kmeans_iterations,kmeans_change_count,-1);
+		// sprintf (cmd,"printf %%s \"%u\n\" >> logs/%ldD/%dN/log_iterations_%d.csv",kmeans_iterations,dim,N,(int)N/taille);
+		// system(cmd); 
+		// save_kmeans_iterations(4,2,1,kmeans_iterations,kmeans_change_count,-1);
 
 		free(chunk);
 		chunk = NULL;
@@ -1315,6 +1316,7 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 		// //sleep(20) ;
 		// save_phase_time(2,1,0,-1);
 		double* X; 
+		X = getmatrix(source, dim, N,N,0, marks );
 		X = getmatrix(source, dim, N,N,0, marks );
 		// rbinmat_write ("points_bin.csv",dim,N,X) ;
 		// X = getmatrix_mmap(source, dim,k,N,N,0,marks);
@@ -1330,8 +1332,8 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 		save_phase_time(2,3,0,-1);	
 		cluster_assignment_final=  (int *) malloc(N*sizeof(int)); 
 		kmeans(dim,X,N, k, cluster_centroid, cluster_assignment_final,&kmeans_iterations,&kmeans_change_count);
-		sprintf (cmd,"printf %%s \"%u\n\" >> logs/%ldD/%dN/log_iterations_%d.csv",kmeans_iterations,dim,N,(int)N/taille);
-		system(cmd); 
+		// sprintf (cmd,"printf %%s \"%u\n\" >> logs/%ldD/%dN/log_iterations_%d.csv",kmeans_iterations,dim,N,(int)N/taille);
+		// system(cmd); 
 		save_kmeans_iterations(2,3,1,kmeans_iterations,kmeans_change_count,-1);
 
 		free(X);
@@ -1386,6 +1388,7 @@ void kmeans_kmeans(double * X,int dim, int taille, int N, int k){ //expérimenta
 
 }
 
+
 int main (int argc, char **argv){
 
 	cpu_set_t set;
@@ -1409,8 +1412,8 @@ int main (int argc, char **argv){
 	//printf ("%s\n", cmd);
 	system(cmd); 
 
-	sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
-	system(cmd); 
+	// sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	// system(cmd); 
 
 	sleep(1);
 	
@@ -1421,10 +1424,10 @@ int main (int argc, char **argv){
 	dim = atoi(argv[5]); 
 	srand(time(NULL));
 
-	sprintf (cmd,"printf %%s \"%s,%lu,%lu,%lu,%lu,\" >> logs/%ldD/%ldN/log_iterations_%ld.csv",source,N,M,dim,k,dim,N,(int)N/M);
-	system(cmd);  
+	// sprintf (cmd,"printf %%s \"%s,%lu,%lu,%lu,%lu,\" >> logs/%ldD/%ldN/log_iterations_%ld.csv",source,N,M,dim,k,dim,N,(int)N/M);
+	// system(cmd);  
 
-	// struct timeval tv_begin, tv_end;
+	// //struct timeval tv_begin, tv_end;
 	//gettimeofday(&tv_begin, NULL); 
 	kmeans_by_chunk( source, dim,M, N, k); 
 	//X= getmatrix(source,dim,N,0,0,NULL) ; 
