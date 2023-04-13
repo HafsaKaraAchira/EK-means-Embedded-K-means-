@@ -1,0 +1,106 @@
+root@hafsa-HP-EliteBook-840-G2:/home/hafsa/Documents/@K-MLIO_Analysis# SKIP_CHUNKS/kmlio_skip_chunk generator/10D/13421800N/SEP0.3/points.csv 10 13421800 6710900 10 500
+echo 26598 > /sys/fs/cgroup/memory/kmeans/cgroup.procs
+conservative
+marks[1] = 1200504671 , 0
+marks[2] = 2401008871 , 0
+set speed in hz 2300000000 in khz 2300000
+userspace
+2300000
+chunk 0 , test skip chunk 0 : freq 800000000 , required time = 6958.377933 remaining time = 404.875772
+chunk 0 , test skip chunk 0 : freq 900000000 , required time = 6196.572574 remaining time = 404.875748
+chunk 0 , test skip chunk 0 : freq 1000000000 , required time = 5587.128287 remaining time = 404.875742
+chunk 0 , test skip chunk 0 : freq 1100000000 , required time = 5088.492052 remaining time = 404.875735
+chunk 0 , test skip chunk 0 : freq 1200000000 , required time = 4672.961856 remaining time = 404.875729
+chunk 0 , test skip chunk 0 : freq 1300000000 , required time = 4321.359382 remaining time = 404.875723
+chunk 0 , test skip chunk 0 : freq 1400000000 , required time = 4019.985834 remaining time = 404.875716
+chunk 0 , test skip chunk 0 : freq 1500000000 , required time = 3758.795425 remaining time = 404.875708
+chunk 0 , test skip chunk 0 : freq 1600000000 , required time = 3530.253817 remaining time = 404.875700
+chunk 0 , test skip chunk 0 : freq 1700000000 , required time = 3328.599457 remaining time = 404.875693
+chunk 0 , test skip chunk 0 : freq 1800000000 , required time = 3149.351137 remaining time = 404.875686
+chunk 0 , test skip chunk 0 : freq 1900000000 , required time = 2988.971062 remaining time = 404.875677
+chunk 0 , test skip chunk 0 : freq 2000000000 , required time = 2844.628994 remaining time = 404.875669
+chunk 0 , test skip chunk 0 : freq 2100000000 , required time = 2714.033789 remaining time = 404.875662
+chunk 0 , test skip chunk 0 : freq 2200000000 , required time = 2595.310876 remaining time = 404.875656
+chunk 0 , test skip chunk 0 : freq 2300000000 , required time = 2486.911695 remaining time = 404.875650
+chunk 0 , test skip chunk 1 : freq 800000000 , required time = 5346.307604 remaining time = 404.875643
+chunk 0 , test skip chunk 1 : freq 900000000 , required time = 4836.388298 remaining time = 404.875636
+chunk 0 , test skip chunk 1 : freq 1000000000 , required time = 4428.452853 remaining time = 404.875629
+chunk 0 , test skip chunk 1 : freq 1100000000 , required time = 4094.687489 remaining time = 404.875620
+chunk 0 , test skip chunk 1 : freq 1200000000 , required time = 3816.549686 remaining time = 404.875611
+chunk 0 , test skip chunk 1 : freq 1300000000 , required time = 3581.202314 remaining time = 404.875604
+chunk 0 , test skip chunk 1 : freq 1400000000 , required time = 3379.475995 remaining time = 404.875597
+chunk 0 , test skip chunk 1 : freq 1500000000 , required time = 3204.646519 remaining time = 404.875590
+chunk 0 , test skip chunk 1 : freq 1600000000 , required time = 3051.670727 remaining time = 404.875582
+chunk 0 , test skip chunk 1 : freq 1700000000 , required time = 2916.692087 remaining time = 404.875575
+chunk 0 , test skip chunk 1 : freq 1800000000 , required time = 2796.711074 remaining time = 404.875568
+chunk 0 , test skip chunk 1 : freq 1900000000 , required time = 2689.359641 remaining time = 404.875559
+chunk 0 , test skip chunk 1 : freq 2000000000 , required time = 2592.743352 remaining time = 404.875552
+chunk 0 , test skip chunk 1 : freq 2100000000 , required time = 2505.328613 remaining time = 404.875544
+chunk 0 , test skip chunk 1 : freq 2200000000 , required time = 2425.860670 remaining time = 404.875537
+chunk 0 , test skip chunk 1 : freq 2300000000 , required time = 2353.302982 remaining time = 404.875530
+set speed in hz 2400000000 in khz 2400000
+userspace
+2400000
+chunk 0 : frequency set at 2400000000 , skip chunk is 0 
+chunk 0 completed
+chunk 1 , test skip chunk 0 : freq 800000000 , required time = 4636.660722 remaining time = 388.530968
+chunk 1 , test skip chunk 0 : freq 900000000 , required time = 4126.741416 remaining time = 388.530957
+chunk 1 , test skip chunk 0 : freq 1000000000 , required time = 3718.805972 remaining time = 388.530942
+chunk 1 , test skip chunk 0 : freq 1100000000 , required time = 3385.040608 remaining time = 388.530936
+chunk 1 , test skip chunk 0 : freq 1200000000 , required time = 3106.902804 remaining time = 388.530930
+chunk 1 , test skip chunk 0 : freq 1300000000 , required time = 2871.555432 remaining time = 388.530924
+chunk 1 , test skip chunk 0 : freq 1400000000 , required time = 2669.829113 remaining time = 388.530919
+chunk 1 , test skip chunk 0 : freq 1500000000 , required time = 2494.999637 remaining time = 388.530915
+chunk 1 , test skip chunk 0 : freq 1600000000 , required time = 2342.023845 remaining time = 388.530911
+chunk 1 , test skip chunk 0 : freq 1700000000 , required time = 2207.045205 remaining time = 388.530904
+chunk 1 , test skip chunk 0 : freq 1800000000 , required time = 2087.064192 remaining time = 388.530898
+chunk 1 , test skip chunk 0 : freq 1900000000 , required time = 1979.712759 remaining time = 388.530891
+chunk 1 , test skip chunk 0 : freq 2000000000 , required time = 1883.096470 remaining time = 388.530886
+chunk 1 , test skip chunk 0 : freq 2100000000 , required time = 1795.681732 remaining time = 388.530881
+chunk 1 , test skip chunk 0 : freq 2200000000 , required time = 1716.213788 remaining time = 388.530875
+chunk 1 , test skip chunk 0 : freq 2300000000 , required time = 1643.656100 remaining time = 388.530869
+set speed in hz 2400000000 in khz 2400000
+userspace
+2400000
+chunk 1 : frequency set at 2400000000 , skip chunk is 0 
+chunk 1 completed
+set speed in hz 2300000000 in khz 2300000
+userspace
+2300000
+chunk 2 : frequency set at 2300000000 , skip chunk is 0 
+stopped at chunk number 2
+chunk 2 , test skip chunk 0 : freq 800000000 , required time = 2353.890588 remaining time = 319.271589
+chunk 2 , test skip chunk 0 : freq 900000000 , required time = 2095.857335 remaining time = 319.271579
+chunk 2 , test skip chunk 0 : freq 1000000000 , required time = 1889.430733 remaining time = 319.271575
+chunk 2 , test skip chunk 0 : freq 1100000000 , required time = 1720.536240 remaining time = 319.271570
+chunk 2 , test skip chunk 0 : freq 1200000000 , required time = 1579.790830 remaining time = 319.271566
+chunk 2 , test skip chunk 0 : freq 1300000000 , required time = 1460.698559 remaining time = 319.271561
+chunk 2 , test skip chunk 0 : freq 1400000000 , required time = 1358.619470 remaining time = 319.271556
+chunk 2 , test skip chunk 0 : freq 1500000000 , required time = 1270.150926 remaining time = 319.271549
+chunk 2 , test skip chunk 0 : freq 1600000000 , required time = 1192.740950 remaining time = 319.271542
+chunk 2 , test skip chunk 0 : freq 1700000000 , required time = 1124.438030 remaining time = 319.271536
+chunk 2 , test skip chunk 0 : freq 1800000000 , required time = 1063.724324 remaining time = 319.271530
+chunk 2 , test skip chunk 0 : freq 1900000000 , required time = 1009.401534 remaining time = 319.271523
+chunk 2 , test skip chunk 0 : freq 2000000000 , required time = 960.511022 remaining time = 319.271517
+chunk 2 , test skip chunk 0 : freq 2100000000 , required time = 916.276751 remaining time = 319.271510
+chunk 2 , test skip chunk 0 : freq 2200000000 , required time = 876.063776 remaining time = 319.271502
+chunk 2 , test skip chunk 0 : freq 2300000000 , required time = 839.347582 remaining time = 319.271495
+set speed in hz 2300000000 in khz 2300000
+userspace
+2300000
+chunk 2 : frequency set at 2300000000 , skip chunk is 0 
+KMLIO TIME = 313.000000 s
+0,0,4.969806
+0,1,4.119509
+0,2,4.026484
+0,3,4.019388
+1,0,3.909646
+1,1,4.017047
+1,2,4.031421
+1,3,4.056499
+2,0,9.247286
+2,1,4.902068
+2,2,4.909321
+2,3,4.905457
+2,4,4.964482
+SKIPPED CHUNKS = 0

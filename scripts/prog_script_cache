@@ -1,4 +1,4 @@
 #!/bin/bash
 sudo sh -c "echo 3 > /proc/sys/vm/drop_caches" ;
 swapoff -a ; 
-# swapon -a ;
+swapon -a ;

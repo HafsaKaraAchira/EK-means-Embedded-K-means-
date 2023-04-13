@@ -12,16 +12,16 @@ from pyJoules.energy_meter import EnergyContext
 # from pyJoules.device import DeviceFactory
 # from pyJoules.energy_meter import measure_energy
 	
-csv_handler = CSVHandler('./logs/log_energy.csv')
+csv_handler = CSVHandler('./logs/log_energy_gov.csv')
 
-file = "generator/CM13,4M_2400MO_SEP0,2/points.csv"
+file = "generator/10D/13421800N/SEP-0.9/points.csv"
 N = 13421800
 k = 10
 dim = 10
 
 #@measure_energy(handler=csv_handler, domains=[RaplCoreDomain(0),RaplDramDomain(0)])
 def program_call(M):
-    os.system("./prog_energy_buf "+file+" "+str(k)+" "+str(N)+" "+str(int(N/M))+" "+str(dim))
+    os.system("./prog_energy_ref "+file+" "+str(k)+" "+str(N)+" "+str(int(N/M))+" "+str(dim))
 
 affinity_mask = {1}
 pid = 0
@@ -38,9 +38,9 @@ def prog_memory_est(N,dim,k,MC) :
     dist_mat_size = M * k * double_size
     kmeans_assign_size = 2 * M *int_size
     chunk_assign_size = M * int_size
-    # dataset_assign_size = N * int_size
+    dataset_assign_size = N * int_size
     
-    size = chunk_size+dist_mat_size+kmeans_assign_size+chunk_assign_size
+    size = chunk_size+dist_mat_size+kmeans_assign_size+chunk_assign_size+dataset_assign_size
     size = math.ceil(( (size) / (1024**2)) + 1.5 ) +1
     
     return size
@@ -59,8 +59,8 @@ for MC in reversed(memory_constraint) :
         with EnergyContext(handler=csv_handler, domains=[RaplCoreDomain(0),RaplDramDomain(0)], start_tag=str(N)+","+str(int(N/MC))+","+str(MC)+","+governor) as ctx:
             # call the target program
             program_call(MC)
+            
+        csv_handler.save_data()
 
-
-csv_handler.save_data()
 
 #################################################################
