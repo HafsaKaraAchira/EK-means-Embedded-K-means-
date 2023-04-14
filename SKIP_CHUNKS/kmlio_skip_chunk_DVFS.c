@@ -6,10 +6,11 @@
 
 DELL : cd /home/hafsa/Documents/@K-MLIO_Analysis/
 BeagleBone : cd /home/debian/@K-MLIO_Analysis/
-scripts/prog_script_cgroup 1155
+scripts/prog_script_cgroup 1104
 scripts/prog_script_reset
 
-(scripts/prog_script_cache) && (clear && gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE) && (SKIP_CHUNKS/kmlio_skip_chunk generator/10D/13421800N/SEP-0.6/points.csv 10 13421800 6710900 10 0)
+(scripts/prog_script_cache) && (clear && gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE)
+SKIP_CHUNKS/kmlio_skip_chunk generator/10D/13421800N/SEP-0.6/points.csv 10 13421800 6710900 10 0
 
 (scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && (./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10)
 (scripts/prog_script_reset) && (clear && gcc -g kmlio.c -o program -lm -D _GNU_SOURCE) && ((./program generator/CM13,4M_2400MO_SEP0,2/points.csv 10 13421800 6710900 10) & (taskset -c 1 scripts/prog_script_launch))
@@ -32,6 +33,12 @@ scripts/prog_script_reset
 
 #include <limits.h> 
 #include <sys/param.h>
+
+
+// #include <Rinternals.h>
+// #include <Rembedded.h>
+
+
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
@@ -97,7 +104,7 @@ struct timeval kmlio_start, kmlio_end;
 double* kmeans_iterations_durations ;
 int* kmeans_nb_iteration ;
 
-long MAX_FREQ = 00000000 , MIN_FREQ = 400000000 , BASE_FREQ = 1800000000 ;
+long MAX_FREQ=2900000000 , MIN_FREQ = 800000000 , BASE_FREQ = 2300000000 ;
 
 long FREQ_STEP = 100000000 ;
 
@@ -153,23 +160,25 @@ double calc_cycles_per_elem(size_t N,size_t M){
 long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found){
 	if(found)
 		(*found) = 0 ;
-	long freq = BASE_FREQ ;
-
+	long freq ;
 	double first_chunk_km = (  chunk_ind == 0  ? ((MAX_ITERATIONS-1) * real_time.C_1_it_elem * M / freq)  : 0 ) ;
+	for (freq = MIN_FREQ ; freq <= BASE_FREQ ; freq+=FREQ_STEP){
 		
-	double rem_time = calc_remaining_Time() ;
-	double tcp = estimate_tcp_max(M,freq) ;
-	double tcf = estimate_tcf_max(N,M,freq) ;
-	double req_time = ((N/M) - chunk_ind - skip_chunk) * tcf + first_chunk_km + tcf ;
-	
-	printf("chunk_id=%d, test skip=%d : freq %ld , required time = (%ld)*tcp(%f)+ tcf(%f) = %f remaining time = %f\n",chunk_ind,skip_chunk,freq,((N/M) - chunk_ind - skip_chunk),tcp,tcf,req_time,rem_time) ;
+		double rem_time = calc_remaining_Time() ;
+		double tcp = estimate_tcp_max(M,freq) ;
+		double tcf = estimate_tcf_max(N,M,freq) ;
+		double req_time = ((N/M) - chunk_ind - skip_chunk) * tcf + first_chunk_km + tcf ;
+		
+		printf("chunk_id=%d, test skip=%d : freq %ld , required time = (%ld)*tcp(%f)+ tcf(%f) = %f remaining time = %f\n",chunk_ind,skip_chunk,freq,((N/M) - chunk_ind - skip_chunk),tcp,tcf,req_time,rem_time) ;
 
-	if ( req_time < rem_time){
-		if (found)	
-			(*found) = 1 ;
-		return freq ;
+		if ( req_time < rem_time){
+			if (found)	(*found) = 1 ;			
+			return freq ;
+		}
+
+		if( freq == BASE_FREQ )
+			break;
 	}
-
 	return freq ;
 }
 
@@ -196,7 +205,7 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 void chunks_kmeans_iterations_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max)
 {
 	char* log_file_name ;
-	asprintf(&log_file_name,"logs/log_chunk_iteration/%ldN_%ldM_%ldD_%dL.csv",N,taille,dim,(int)D_max) ;
+	asprintf(&log_file_name,"logs/log_kmeans_iteration_%ldN_%ldM_%ldD_%dL.csv",N,taille,dim,(int)D_max) ;
 	FILE * fp = fopen(log_file_name,"wt") ;
 	FILE * fl = fopen("logs/log_skip_chunk.csv","at") ;
 	fprintf(fl,"%ld,%ld,%ld,%ld,%lf,%d,%lf,{",N,taille,dim,k,D_max,skp_chk,calc_delai_time(kmlio_start,kmlio_end));
