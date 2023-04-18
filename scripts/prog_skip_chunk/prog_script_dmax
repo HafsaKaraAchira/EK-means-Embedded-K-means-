@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# vary dmax,M for the given dataset , (sep,N,dim,K)
+
+k=$1
+N=$2
+dim=$3
+
+nb_exp=$5
+
+M=$(($2/$3))
+
+for sep in  "0.5" "0.4" "0.3" "0.2" "0.1" "0.0" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5" "-0.6"  ; do
+    for ((i=0;i<$nb_exp;i++)); do 
+        dataset="generator/${dim}D/${N}N/SEP${sep}/points.csv"
+        echo $dataset
+        # (
+        #     scripts/prog_script_reset
+        # ) && clear &&
+        # (
+        #     gcc -g kmlio.c -o program -lm -D _GNU_SOURCE
+        # ) && (
+            ./program $dataset $k $N $M $dim
+        # ) 
+    done
+done
+
+# generator/10D/13421800N/SEP|/points.csv

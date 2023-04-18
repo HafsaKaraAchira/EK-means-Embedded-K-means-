@@ -1179,7 +1179,6 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 	//mark the chunks in dataset
 	save_phase_time(1,1,0,-1);
 	long *marks = mark(source, dim, N, taille);
-	long *marks = mark(source, dim, N, taille);
 	save_phase_time(1,1,1,-1);
 	
 	//apply kmeans on each chunk
@@ -1317,7 +1316,7 @@ void kmeans_by_chunk( char * source, size_t dim, int taille, int N, int k){
 		// save_phase_time(2,1,0,-1);
 		double* X; 
 		X = getmatrix(source, dim, N,N,0, marks );
-		X = getmatrix(source, dim, N,N,0, marks );
+		// X = getmatrix(source, dim, N,N,0, marks );
 		// rbinmat_write ("points_bin.csv",dim,N,X) ;
 		// X = getmatrix_mmap(source, dim,k,N,N,0,marks);
 		// X = getmatrix_bin(source,dim,N,N,0); 
