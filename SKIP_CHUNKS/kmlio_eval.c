@@ -241,7 +241,7 @@ void r8mat_write ( char *output_filename, int m, int n, double table[] )
 /*
   Open the file.
 */
-  output = fopen ( output_filename, "at" );
+  output = fopen ( output_filename, "wt" );
 
   if ( !output )
   {
@@ -1643,33 +1643,51 @@ int main (int argc, char **argv){
 
 	sleep(1);
 	
-	char * source = argv[1]; 
+	char * folder = argv[1]; 
+	char * source ; 
+	asprintf(&source,"%s/points.csv",folder) ;
 	size_t k = atoi(argv[2]);
 	N = atoi(argv[3]); 
 	taille = atoi(argv[4]);
 	dim = atoi(argv[5]); 
+	char * report = argv[6]; 
 	srand(time(NULL));
 	
-
+	//mark
 	int * marks = mark(source, dim, N, taille);
+
+	printf("test\n") ;
 	
+	//read all the dataset
 	X = getmatrix(source, dim, N,N,0, marks);
 	
-	double * cluster_centroid = r8mat_data_read ("results/result_centers.csv",dim,k) ;
+	//get the clustering result centers
+	char * result_centers ;
+	asprintf(&result_centers,"%s/result_centers.csv",report) ;
+	double * cluster_centroid = r8mat_data_read (result_centers,dim,k) ;
 	
+	//get the distance matrix witween each paire of point-center
 	double *dist = (double *)malloc(sizeof(double) * N * k);
    	calc_all_distances(dim, N, k, X, cluster_centroid, dist);
    	
+	//get the clustring result points assignement using the distance matrix
 	int * cluster_assignment_final = (int *) malloc(N*sizeof(int)); 
    	choose_all_clusters_from_distances(dim,N, k, dist, cluster_assignment_final);
+
+	//save the result clustreing of dataset points in file for later use
+	char * result_clusters_file_name ;
+	asprintf(&result_clusters_file_name,"%s/result_clusters.csv",report) ;
+	i4mat_write(result_clusters_file_name,1,N,cluster_assignment_final) ;
 	
+	//calculate sse 
 	double sse_result = sse_calculate (X, dim, cluster_centroid, cluster_assignment_final ,N) ;
 
+	//read the real classes centers and real asignnmenet of points
+	char * solution_centers_file_name ;
+	asprintf(&solution_centers_file_name,"%s/real_centers_norm.csv",folder) ;
+	char * solution_assignment_file_name ;
+	asprintf(&solution_assignment_file_name,"%s/real_classes.csv",folder) ;
 
-
-	double * result_centroid;
-	char * solution_centers_file_name = "generator/10D/13421800N/SEP-0.6/real_centers_norm.csv" ;
-	char * solution_assignment_file_name  = "generator/10D/13421800N/SEP-0.6/real_centres.csv" ;
 	char *token; 
 	char tmp[1000000]; 
 	char delim[3] = "\t"; 
@@ -1709,13 +1727,15 @@ int main (int argc, char **argv){
 	}
 	fclose(a_solution); 
 
+
+	// calculate the distance matrix for real dataset classes-points and calculate the rel sse
 	calc_all_distances(dim, N, k, X, solution_centroid, dist);
 	double sse_solution = sse_calculate (X, dim, solution_centroid, solution_assignment ,N) ;
 
-	printf ("delta solution_type %f solution obtenue %f : %lf\n",sse_solution,sse_result,(sse_solution-sse_result)); 
+	printf ("delta solution_type %f solution obtenue %f : %lf\n",sse_solution,sse_result,(sse_result-sse_solution)); 
 
-	FILE * fl = fopen("logs/log_skip_chunk.csv","at") ;
-	fprintf(fl,"%lf\n",(sse_result-sse_solution));
+	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
+	fprintf(fl,",%lf,",(sse_result-sse_solution));
 
 	free(X);
 	X = NULL;
