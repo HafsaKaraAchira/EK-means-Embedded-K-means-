@@ -197,7 +197,6 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 	skp_chk = skp ;
 }
 
-
 void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double * centroid){
 	char*  dirname ;
 	asprintf(&dirname,"SKIP_CHUNKS/reports/%ldN_%ldM_%ldD_%ldK_%dL",N,taille,dim,k,(int)D_max) ;

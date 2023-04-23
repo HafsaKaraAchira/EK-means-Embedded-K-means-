@@ -8,45 +8,75 @@ library(pdist)
 library("sos")
 library("matrixStats")
 
-
-kmlio_err <- function(centers_dists,N,M,K,DIM,SEP,skip_chunks) {
-    # print(centers_dists)
-    assign <- solve_LSAP(centers_dists, maximum = FALSE)
-    print(assign)
-    ## To get the optimal value (for now):
-    dist_err <- sum(centers_dists[cbind(seq_along(assign),assign)]) / K
-
-    dataplus <- data.frame(N, M, N/M, K, DIM, SEP,skip_chunks,dist_err)
-
-    write.table(dataplus,
-          "generator/kmlio_cluster_evaluation.csv",
-          quote = FALSE,
-          col.names = FALSE,
-          row.names = FALSE,
-          sep = "\t",
-          append = T)
-
-    # done
-}
-
 #############################################
 #             clusters centers
 #############################################
 
-folder <- "generator/10D/13421800N/SEP0.3/"
+args <- commandArgs()
+print(args)
 
-N <- 13421800
-M <- 3355450    #6710900
-K <- 10
-DIM <- 10
-V <- 10
-SEP <- 0.3
-skip_chunks <-0
+SEP <- args[6]
+N <- args[7]
+M <- args[8]
+K <- args[9]
+DIM <- args[10]
+DMAX <- args[11]
+
+########################################
+########################################
+
+
+report <- sprintf("SKIP_CHUNKS/reports/%ldN_%ldM_%ldD_%ldK_%dL/",N,M,DIM,K,DMAX)
+
+folder <- sprintf("generator/%sD/%sN/SEP%s/",DIM,N,SEP) 
 
 original_centres <- read.table(paste(folder,"real_centers_norm.csv",sep=""),header = FALSE,sep = "\t",stringsAsFactors = FALSE)
-clusters_centres <- read.table("results/result_centers.csv", header = FALSE,  sep = "\t", stringsAsFactors = FALSE)
+clusters_centres <- read.table(paste(result,"result_centers.csv"), header = FALSE,  sep = "\t", stringsAsFactors = FALSE)
 
-dists <- as.matrix(pdist(t(clusters_centres[,-11]), t(original_centres)))
-print(dists)
+########################################
+########################################
+########################################
+########################################
+########################################
 
-kmlio_err(dists,N,M,K,DIM,SEP,skip_chunks)
+#get the real and results centers paires assignments
+
+centers_dists <- as.matrix( pdist( t(clusters_centres) , t(original_centres) ) )
+print(centers_dists)
+assign <- solve_LSAP(centers_dists, maximum = FALSE)
+print(assign)
+
+########################################
+########################################
+########################################
+########################################
+
+centers_err <- c(1:K)*0
+
+for( d in (1:DIM)){
+    unidim_dists <- as.matrix( pdist( t(clusters_centres[,d]) , t(original_centres[,d]) ) )
+    print(unidim_dists)
+    print(unidim_dists[cbind(seq_along(assign),assign)])
+    centers_err[ ] <- centers_err[ ] +  ( unidim_dists[cbind(seq_along(assign),assign)]  / clusters_centres[,d] ) [ ]
+}
+
+centers_err <- centers_err / DIM
+
+########################################
+########################################
+########################################
+
+
+kmlio_err <- sum(centers_err) / K
+
+dataplus <- data.frame(kmlio_err)
+
+write.table(dataplus,
+          paste(result,"log_skip_chunk.csv"),
+          quote = FALSE,
+          col.names = FALSE,
+          row.names = FALSE,
+          sep = ",",
+          append = T)
+
+# kmlio_err(dists,N,M,K,DIM,SEP,skip_chunks)
