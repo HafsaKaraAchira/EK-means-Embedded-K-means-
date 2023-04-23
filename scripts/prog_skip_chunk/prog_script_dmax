@@ -5,20 +5,26 @@
 k=$1
 N=$2
 dim=$3
+MEM_SIZE=$4
 
 # "-0.6" "-0.5" "-0.4" "-0.3" "-0.2" "-0.1" "0.0" "0.1" "0.2" "0.3" "0.4" "0.5"
 
 for sep in "-0.9" ; do
-    for MC in {1,2,4,5,8,10}    # 33 dmax values
+    for MC in 8    # 33 dmax values
     do 
-        for d_max in {420..2400..60}    # 33 dmax values
+        scripts/prog_script_cgroup $MEM_SIZE
+        for d_max in {1200..2400..120}    # 15 dmax values
         do 
-            dataset="generator/${dim}D/${N}N/SEP${sep}/points.csv"
+            folder="generator/${dim}D/${N}N/SEP${sep}"
+            dataset="${folder}/points.csv"
             echo $dataset
+            
             M=$(($N/$MC))
-            echo "$sep," > tee -a SKIP_CHUNKS/reports/log_skip_chunk.csv
 
-            clear
+            report="SKIP_CHUNKS/reports/${N}N_${M}M_${dim}D_${k}K_${d_max}L"
+            echo $report
+            
+            echo -n "$sep," | tee -a SKIP_CHUNKS/reports/log_skip_chunk.csv
 
             (
                 scripts/prog_script_cache
@@ -26,19 +32,17 @@ for sep in "-0.9" ; do
                 gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
             ) && (
                 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max 5
-            ) &&
+            
+            ) && ( ###################
 
-            Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max
-
-            &&
-
-            (
-                scripts/prog_script_cache
-            ) && (
                 gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
             ) && (
-                SKIP_CHUNKS/kmlio_eval $dataset $k $N $M $dim
-            ) &&
+                SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
+            
+            ) && ( ###################
+
+                Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max
+            )
              
         done
     done

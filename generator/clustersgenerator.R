@@ -8,6 +8,7 @@ library("readr")
 K <- 10 # clusters
 Dim <- 10 # dimension
 
+
 # c <- 134218   # cluster points number
 # sepvalue <- 0.4   # sep value
 
