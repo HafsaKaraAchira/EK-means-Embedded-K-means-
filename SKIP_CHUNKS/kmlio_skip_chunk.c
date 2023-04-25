@@ -255,7 +255,10 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 			// // printf("found optimal frequency = %ld\n",(*freq)) ;
 			// return ;
 		}
-		skp++ ;
+		if(sol_ind > 0 && beta <= (skp / (N/M)) )
+			break;
+		else
+			skp++ ;
 	}
 
 	if( sol_ind > 0 ){
@@ -299,8 +302,8 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 			fprintf(fp,"%d,%d,%lf\n",m,it,kmeans_iterations_durations[m*MAX_ITERATIONS+it]);
 			T_all_iteration += kmeans_iterations_durations[m*MAX_ITERATIONS+it] ;
 		}
-		// double estimated_chunk_delay = ( m==0 ? ((MAX_ITERATIONS-nb_it_sample) * real_time.C_1_it_elem * taille / kmlio_chunks_stats[m].km_nb_iterations ) : ( m==(N/taille) ? estimate_tcf_max(N,taille,kmlio_chunks_stats[m].freq) : estimate_tcp_max(taille,kmlio_chunks_stats[m].freq) ) ) ;
-		fprintf(fl,"(%d;%ld;%f;%f;%f),",kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay);
+		double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_real_delay - kmlio_chunks_stats[m].chunk_estimated_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
+		fprintf(fl,"(%d;%ld;%f;%f;%f,%.4f),",kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error) ;
 	}
 	fprintf(fl,"\b}");
 
@@ -1723,90 +1726,6 @@ double *form_chunk(groupe *grp, /*double *X*/ char *source, int *marks, int *clu
 }
 
 
-void compare_solution ( double * result_centroid, char * solution_centers_file_name , /*,char * solution_assignment_file_name*/ size_t dim, size_t k, size_t n){
-	char *token; 
-	char tmp[1000000]; 
-	char delim[3] = "\t"; 
-	int index=0, index2;  
-	double delta=0; 
-	
-	FILE *c_solution = fopen (solution_centers_file_name, "r"); 
-	double * solution_centroid = (double *) malloc (sizeof(double) * k * dim);
-	printf("Real clusters %ld\n", k);
-	while(!feof(c_solution)){
-		fgets (tmp, 1000000, c_solution); 
-		token = strtok(tmp, delim); 
-		while (token != NULL){
-			solution_centroid[index] = atof(token); 
-			printf("%f\t",solution_centroid[index]) ;
-			index++;
-			token = strtok(NULL, delim); 	
-		}
-		printf("\n") ;
-	}
-	fclose(c_solution); 
-
-	int ii, j;
-	int min_c ;
-	printf("Real clusters %ld\n", k);
-
-	// FILE *a_solution = fopen (solution_assignment_file_name, "r"); 
-	// int * assignment_solution = (int *) malloc (sizeof(int) * n);
-	// index=0 ;
-	// while(!feof(a_solution)){
-	// 	fgets (tmp, 1000000, a_solution); 
-	// 	token = strtok(tmp, delim); 
-	// 	while (token != NULL){
-	// 		assignment_solution[index] = atoi(token); 
-	// 		printf("%f\t",assignment_solution[index]) ;
-	// 		index++;
-	// 		token = strtok(NULL, delim); 	
-	// 	}
-	// 	printf("\n") ;
-	// }
-	// fclose(a_solution); 
-	// int * result_assignement = malloc(sizeof(int) * n) ;
-
-	double * dist= malloc(sizeof(double)*k*k) ;
-
-	calc_all_distances(dim,k,k,result_centroid,solution_centroid,dist) ;
-	
-	/////////////////////////////////////////
-
-	// // Load the R function (source function defined above)
-	// source("generator/cluster_evaluation.R") ;
- 
-	// // Allocate an R vector and copy the C array into it.
-	// SEXP arg;
-	// PROTECT(arg = allocVector(INTSXP, k*k));
-	// memcpy(INTEGER(arg), dist, k * k * sizeof(int));
-
-	free(dist);
-
-
-
-
-
-
-
-	////////////////////////
-
-
-
-	// for (index = 0; index<k; index++){
-	// 	printf ("centres %d\n", index); 
-	// 	for (index2=0; index2<dim; index2++){
-	// 		printf ("sol: %lf  sol obt : %lf\n", solution_centroid[index*dim+index2], centroid[index*dim+index2]); 
-	// 	}
-		
-	// 	delta +=calc_distance(dim,&solution_centroid[index*dim], &centroid[index*dim]);  	
-	// }
-	// printf ("delta solution_type solution obtenue : %lf\n", sqrt(delta)); 
-
-	free(solution_centroid); 
-}
-
-
 void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double ** cluster_centroid)
 {
 	int i, j, n, m = 0, kmeans_iterations = 0, kmeans_change_count = 0;
@@ -2023,12 +1942,12 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 
 		/****** PHASE 3 : FINAL CHUNK BUILDING ******/
 
-		printf("begin form chunk\n") ;
+		// printf("begin form chunk\n") ;
 		
 		double *chunk;
 		chunk = form_chunk(groupes, source, marks, cluster_assignment_final, nb_groupes, N, dim, k, taille);
 
-		printf("end form chunk\n") ;
+		// printf("end form chunk\n") ;
 
 		free(cluster_assignment_final);
 		cluster_assignment_final = NULL;
@@ -2053,7 +1972,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 		chunk = NULL;
 
 		gettimeofday(&chunk_end, NULL);
-
+		kmlio_chunks_stats[chunk_ind].chunk_real_delay = calc_delai_time(chunk_start,chunk_end) ;
 		kmlio_chunks_stats[chunk_ind].km_nb_iterations = kmeans_iterations ;
 	}
 	else
@@ -2076,8 +1995,6 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 
 	free(marks);
 	marks = NULL;
-
-	kmlio_chunks_stats[chunk_ind].chunk_real_delay = calc_delai_time(chunk_start,chunk_end) ;
 
 	// free(cluster_centroid);
 	// cluster_centroid = NULL;
