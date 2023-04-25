@@ -1654,7 +1654,7 @@ int main (int argc, char **argv){
 	srand(time(NULL));
 	
 	//mark
-	int * marks = mark(source, dim, N, taille);
+	int * marks = mark(source, dim, N, N);
 
 	printf("test\n") ;
 	
@@ -1742,3 +1742,6 @@ int main (int argc, char **argv){
 	
 	return 0;
 }
+
+
+// n/m = 10 , sol-type sse = 511536.947091

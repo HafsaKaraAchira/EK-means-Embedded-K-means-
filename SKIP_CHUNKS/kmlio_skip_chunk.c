@@ -2143,6 +2143,8 @@ int main(int argc, char **argv)
 	printf("\n----------------------------------------------------------------------------\n") ;
 	printf("\n----------------------------------------------------------------------------\n") ;
 
+	set_governor() ;
+
 	kmlio_diag(k,dim,N,taille,D_max,centroid) ;
 
 	printf("KMLIO EXECUTION REPORT READY\n") ;

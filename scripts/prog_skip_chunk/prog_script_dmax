@@ -7,13 +7,16 @@ N=$2
 dim=$3
 MEM_SIZE=$4
 
+# 10 , 8 , 5 , 4 , 2
+# 280, 330 , 500 , 610 , 1155
+
 # "-0.6" "-0.5" "-0.4" "-0.3" "-0.2" "-0.1" "0.0" "0.1" "0.2" "0.3" "0.4" "0.5"
 
-for sep in "-0.9" ; do
-    for MC in 8    # 33 dmax values
+for sep in "-0.6" ; do
+    for MC in 10 # 33 dmax values
     do 
         scripts/prog_script_cgroup $MEM_SIZE
-        for d_max in {1200..2400..120}    # 15 dmax values
+        for d_max in {300..2400..120}    # 15 dmax values
         do 
             folder="generator/${dim}D/${N}N/SEP${sep}"
             dataset="${folder}/points.csv"
