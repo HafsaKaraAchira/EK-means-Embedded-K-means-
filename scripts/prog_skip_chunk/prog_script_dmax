@@ -12,7 +12,7 @@ MEM_SIZE=$4
 
 # "-0.6" "-0.5" "-0.4" "-0.3" "-0.2" "-0.1" "0.0" "0.1" "0.2" "0.3" "0.4" "0.5"
 
-for sep in "-0.6" ; do
+for sep in "-0.3" ; do
     for MC in 10 # 33 dmax values
     do 
         scripts/prog_script_cgroup $MEM_SIZE
