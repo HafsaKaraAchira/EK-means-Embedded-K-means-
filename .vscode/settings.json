@@ -14,5 +14,6 @@
         "*.tcc": "c",
         "cstdint": "c",
         "typeinfo": "c"
-    }
+    },
+    "r.lsp.promptToInstall": false
 }

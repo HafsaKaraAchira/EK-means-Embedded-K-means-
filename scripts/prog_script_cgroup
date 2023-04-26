@@ -1,7 +1,16 @@
 #!/bin/bash
 
-mkdir /sys/fs/cgroup/memory/kmeans
+mkdir -p /sys/fs/cgroup/memory/kmeans
+sysctl vm.swappiness=5
+echo 5 > /sys/fs/cgroup/memory/kmeans/memory.swappiness
 echo $(($1 * 1024 * 1024)) > /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes
 cat /sys/fs/cgroup/memory/kmeans/memory.limit_in_bytes
+cat /sys/fs/cgroup/memory/kmeans/memory.swappiness
+
+# mkdir -p /sys/fs/cgroup/blkio/kmeans
+# echo "8:0 $(($2 * 1024 * 1024))" > /sys/fs/cgroup/blkio/kmeans/blkio.throttle.read_bps_device
+# echo "8:0 $(($2 * 1024 * 1024))" > /sys/fs/cgroup/blkio/kmeans/blkio.throttle.write_bps_device
+# cat /sys/fs/cgroup/blkio/kmeans/blkio.throttle.read_bps_device
+# cat /sys/fs/cgroup/blkio/kmeans/blkio.throttle.write_bps_device
 
 # 

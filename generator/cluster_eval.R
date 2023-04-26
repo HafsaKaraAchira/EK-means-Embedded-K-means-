@@ -37,9 +37,9 @@ as.matrix(dists)
 library("sos")
 #findFn("colMins")
 library("matrixStats")
-min_dists <- colMins(as.matrix(dists))
+# min_dists <- colMins(as.matrix(dists))
 
-dataplus <- data.frame(init_method, N, M, N/M, K, V, SEP, mc_ari,sum(min_dists)/K,-1,-1,-2,t(min_dists))
+dataplus <- data.frame(init_method, N, M, N/M, K, V, SEP, mc_ari,sum(as.matrix(dists))/K,-1,-1,-2,t(min_dists))
 
 write.table(dataplus,
           "generator/clusters_eval_log.csv",
