@@ -214,7 +214,7 @@ long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * est
 		printf("corrected avg it delay = %f from %d of chunk 0\n",real_time.km_1_iteration_time,kmlio_chunks_stats[0].km_nb_iterations) ;
 	}
 
-	int exec_chunk_nb = (N/M) - (chunk_ind == 0?chunk_ind+1:chunk_ind) , exec_nb_iterations = 0 , final_chunk_exist  = 1 , rem_chunks = 0 ;
+	int exec_chunk_nb = (N/M) - (chunk_ind == 0) - chunk_ind , exec_nb_iterations = 0 , final_chunk_exist  = 1 , rem_chunks = 0 ;
 	double C_cp, C_cf, req_time , C_1st_chk_km  , T_read;
 
 	double c_km = estimate_C_1_iteration_time(M) , c_init = estimate_C_init_time(M) , c_getmat = estimate_C_get_matrix_time(M) ;
@@ -282,7 +282,7 @@ long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * est
 	printf("%ld\n",available_frequencies[min]);
 	freq = BASE_FREQ ;
 
-	printf("chunk_id=%d, test skip=%d : freq %ld , required freq = %f , optimal freq = %ld required time = (%f) for (%d) chunk + (%d) final chunk remaining time = %f\n",chunk_ind,skip_chunk,freq,req_freq,available_frequencies[min],req_cycles/freq+T_read,exec_chunk_nb - skip_chunk,final_chunk_exist,rem_time) ;
+	printf("chunk_id=%d, test skip=%d: freq=%ld, req_freq=%f, opt_freq=%ld, req_time=%fs for: (%d)p+(%d)f chunks, rem_time=%fs\n",chunk_ind,skip_chunk,freq,req_freq,available_frequencies[min],req_cycles/freq+T_read,exec_chunk_nb - skip_chunk,final_chunk_exist,rem_time) ;
 	
 	// printf("chunk_id=%d, test skip=%d : freq %ld , required time = (%f)1st chunk + (%d)*tcp(%f)+ tcf(%f) = %f remaining time = %f\n",chunk_ind,skip_chunk,freq,C_1st_chk_km,( exec_chunk_nb - skip_chunk ),tcp,tcf,req_time,rem_time) ;	
 	// if(BASE_FREQ > req_freq){
