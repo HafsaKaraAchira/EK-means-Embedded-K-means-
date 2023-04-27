@@ -278,19 +278,17 @@ long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * est
 			// 	break;
 	}
 
-	(*found) = (BASE_FREQ >= req_freq) ;
+	(*found) = (req_freq>0 && BASE_FREQ >= req_freq) ;
 	printf("%ld\n",available_frequencies[min]);
+	freq = BASE_FREQ ;
 
-	printf("chunk_id=%d, test skip=%d : freq %ld , optimal freq = %ld required time = (%f) for (%d) chunk + (%d) final chunk remaining time = %f\n",chunk_ind,skip_chunk,freq,available_frequencies[min],req_cycles/freq+T_read,exec_chunk_nb - skip_chunk,final_chunk_exist,rem_time) ;
+	printf("chunk_id=%d, test skip=%d : freq %ld , required freq = %f , optimal freq = %ld required time = (%f) for (%d) chunk + (%d) final chunk remaining time = %f\n",chunk_ind,skip_chunk,freq,req_freq,available_frequencies[min],req_cycles/freq+T_read,exec_chunk_nb - skip_chunk,final_chunk_exist,rem_time) ;
 	
-	// printf("chunk_id=%d, test skip=%d : freq %ld , required time = (%f)1st chunk + (%d)*tcp(%f)+ tcf(%f) = %f remaining time = %f\n",chunk_ind,skip_chunk,freq,C_1st_chk_km,( exec_chunk_nb - skip_chunk ),tcp,tcf,req_time,rem_time) ;
-	
-	if(BASE_FREQ > req_freq){
-		(*found) = 1 ;
-		return freq ;
-	}
-
-	
+	// printf("chunk_id=%d, test skip=%d : freq %ld , required time = (%f)1st chunk + (%d)*tcp(%f)+ tcf(%f) = %f remaining time = %f\n",chunk_ind,skip_chunk,freq,C_1st_chk_km,( exec_chunk_nb - skip_chunk ),tcp,tcf,req_time,rem_time) ;	
+	// if(BASE_FREQ > req_freq){
+	// 	(*found) = 1 ;
+	// 	return freq ;
+	// }
 
 	return freq ;
 }
@@ -356,10 +354,10 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 			fprintf(fp,"%d,%d,%lf\n",m,it,kmeans_iterations_durations[m*MAX_ITERATIONS+it]);
 			T_all_iteration += kmeans_iterations_durations[m*MAX_ITERATIONS+it] ;
 		}
-		double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_real_delay - kmlio_chunks_stats[m].chunk_estimated_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
-		fprintf(fl,"(%d;%ld;%f;%f;%f,%.4f),",kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error) ;
+		double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_estimated_delay - kmlio_chunks_stats[m].chunk_real_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
+		fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;T_all_it\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error,(m==(N/taille)?"":",")) ;
 	}
-	fprintf(fl,"\b}");
+	fprintf(fl,"}");
 
 	// LOG_CENTERS
 	char*  result_file_name ;
@@ -1415,8 +1413,8 @@ double *kmeans_init_plusplus(double *X, size_t N, size_t dim, size_t k)
 	double *distance_cur_center = (double *)malloc(sizeof(double) * N);
 	int *centers_int = (int *)malloc(sizeof(int) * k);
 	double sum = 0;
-	// int first = rand()%N ;
-	int first = chunk_ind;
+	int first = rand()%N ;
+	// int first = chunk_ind;
 
 	int i, j, best;
 	centers_int[0] = first;
@@ -1710,8 +1708,8 @@ double *form_chunk(groupe *grp, /*double *X*/ char *source, int *marks, int *clu
 			for (j = 0; j < nb_samples; j++)
 			{
 
-				// tmp = rand()%grp[i].nb_members;
-				tmp = (j + i * nb_samples) % grp[i].nb_members;
+				tmp = rand()%grp[i].nb_members;
+				// tmp = (j + i * nb_samples) % grp[i].nb_members;
 
 				if (size == taille)
 					break;

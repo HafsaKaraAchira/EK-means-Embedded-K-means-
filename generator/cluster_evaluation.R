@@ -35,8 +35,9 @@ M <- args[8]
 K <- args[9]
 DIM <- args[10]
 DMAX <- args[11]
+EXP_ID <- args[12]
 
-report <- sprintf("SKIP_CHUNKS/reports/%sN_%sM_%sD_%sK_%sL/",N,M,DIM,K,DMAX)
+report <- sprintf("SKIP_CHUNKS/reports/SEP%s/%sN_%sM_%sD_%sK_%sL_EXP%s/",SEP,N,M,DIM,K,DMAX,EXP_ID)
 folder <- sprintf("generator/%sD/%sN/SEP%s/",DIM,N,SEP) 
 
 
