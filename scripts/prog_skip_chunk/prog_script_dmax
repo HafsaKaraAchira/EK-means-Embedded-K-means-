@@ -11,14 +11,14 @@ nb_exp=$5
 # 280, 330 , 500 , 610 , 1155
 
 # "-0.6" "-0.5" "-0.4" "-0.3" "-0.2" "-0.1" "0.0" "0.1" "0.2" "0.3" "0.4" "0.5"
-# "0.5" "0.4"
+# "0.5" "0.4"  "0.2" "0.1" "0.0" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5"
 
-for sep in "0.3" "0.2" "0.1" "0.0" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5" ; do
+for sep in "0.3" ; do
     mkdir -p SKIP_CHUNKS/reports/SEP${sep}
     for MC in 10 # 33 dmax values
     do 
         scripts/prog_script_cgroup $MEM_SIZE
-        for d_max in {300..1800..60}    # 15 dmax values
+        for d_max in 450 465 510 525 555 570 585 615 630 645 690 750 765 855 870 915 930 #{780..1800..60}    # 15 dmax values
         do
             for ((i=0;i<$nb_exp;i++)); do 
                 folder="generator/${dim}D/${N}N/SEP${sep}"
@@ -51,6 +51,8 @@ for sep in "0.3" "0.2" "0.1" "0.0" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5" ; do
                 ) && ( ###################
 
                     Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max $i
+                ) &&(
+                    chmod 777 -R .
                 )
             done
         done
