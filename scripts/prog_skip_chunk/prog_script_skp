@@ -14,7 +14,7 @@ nb_exp=$5
 # "0.3" "0.2" "0.0" 
 # "0.5" "0.4" "0.1" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5"
 
-for sep in "-0.1" ; do
+for sep in "-0.2" ; do
     mkdir -p SKIP_CHUNKS/reports/SKIP_PARAM/SEP${sep}
     for MC in 10 # 33 dmax values
     do 
