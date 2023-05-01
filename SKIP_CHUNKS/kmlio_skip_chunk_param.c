@@ -113,6 +113,7 @@ typedef struct chunk_stats chunk_stats;
 int chunk_ind = 0;
 
 int skp_chk = 0 ;
+int to_skip = 0 ;
 int D_max ;
 double beta = 0 ;
 int nb_it_sample = 1 ;
@@ -329,11 +330,11 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 
 void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double * centroid){
 	char*  dirname ;
-	asprintf(&dirname,"SKIP_CHUNKS/reports/%ldN_%ldM_%ldD_%ldK_%dL",N,taille,dim,k,(int)D_max) ;
+	asprintf(&dirname,"SKIP_CHUNKS/reports/%ldN_%ldM_%ldD_%ldK_%dSKP",N,taille,dim,k,(int)to_skip) ;
 	int check = mkdir(dirname,0777);
 	sleep(5);
 
-	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
+	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk_precision.csv","at") ;
 
 	// log kmlio dataset properties : N, DIM , K , M , DMAX , TOTAL kmlio time
 	fprintf(fl,"%ld,%ld,%ld,%ld,%lf,%d,%lf,",N,taille,dim,k,D_max,skp_chk,calc_delai_time(kmlio_start,kmlio_end));
@@ -354,8 +355,8 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 			fprintf(fp,"%d,%d,%lf\n",m,it,kmeans_iterations_durations[m*MAX_ITERATIONS+it]);
 			T_all_iteration += kmeans_iterations_durations[m*MAX_ITERATIONS+it] ;
 		}
-		double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_estimated_delay - kmlio_chunks_stats[m].chunk_real_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
-		fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;T_all_it\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error,(m==(N/taille)?"":",")) ;
+		// double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_estimated_delay - kmlio_chunks_stats[m].chunk_real_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
+		fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;T_all_it\":%f;\"estimated_delay\":%d;\"real_delay\":%f;\"delay_error\":%d)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,-1,kmlio_chunks_stats[m].chunk_real_delay,-1,(m==(N/taille)?"":",")) ;
 	}
 	fprintf(fl,"}");
 
@@ -1024,6 +1025,7 @@ void kmeans(
 					//get optimal frequency and skip chunk for the first chunk execution
 					long freq ;
 					decide_skip_chunk(N,n,&freq) ;
+					skp_chk=to_skip ;
 					//set the optimal frequency for the rest of the chunk execution
 					set_frequency(freq) ;
 					// printf("in km , chunk %d : frequency set at %ld , skip chunk is %d \n",chunk_ind,freq,skp_chk) ;
@@ -1865,6 +1867,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 			chunk_ind ++ ;
 
 			decide_skip_chunk(N,taille,&freq) ;
+			skp_chk=to_skip ;
 
 			// ////////////////////////////////////
 			
@@ -1933,7 +1936,6 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 			m++ ;
 		}
 
-		// decide_skip_chunk(N,taille,&freq) ;
 		int found  = 0 ;
 		double estimated_chunk_delay  = 0 ;
 		freq = get_optimal_freq(N,taille,skp_chk,&found,&estimated_chunk_delay) ;
@@ -2088,7 +2090,8 @@ int main(int argc, char **argv)
 	N = atoi(argv[3]);
 	taille = atoi(argv[4]);
 	dim = atoi(argv[5]);
-	D_max = atoi(argv[6]);	// kmlio maximal delay time in seconds
+	D_max = 3600;
+	to_skip = atoi(argv[6]);	// kmlio maximal delay time in seconds
 	nb_it_sample = (argc>7?atoi(argv[7]):1) ;	// number of samples that enter in calculating iteration avg time
 	beta = (argc>8?atoi(argv[8]):0) ;	// precison - energy tendency factor for skip chunk strategy
 	skp_chk = 0 ;

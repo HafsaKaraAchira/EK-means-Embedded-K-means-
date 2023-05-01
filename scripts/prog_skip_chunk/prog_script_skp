@@ -11,33 +11,33 @@ nb_exp=$5
 # 280, 330 , 500 , 610 , 1155
 
 # "-0.6" "-0.5" "-0.4" "-0.3" "-0.2" "-0.1" "0.0" "0.1" "0.2" "0.3" "0.4" "0.5"
-# "0.5" "0.4" "0.3" "0.1" "0.0" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5"
+# "0.3" "0.2" "0.0" 
+# "0.5" "0.4" "0.1" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5"
 
-for sep in "0.2" ; do
-    mkdir -p SKIP_CHUNKS/reports/SEP${sep}
+for sep in "-0.2" ; do
+    mkdir -p SKIP_CHUNKS/reports/SKIP_PARAM/SEP${sep}
     for MC in 10 # 33 dmax values
     do 
         scripts/prog_script_cgroup $MEM_SIZE
-        for d_max in {375..1200..15}    # 15 dmax values
-        do
+        for ((skp=$(($MC-1));skp>=0;skp--)); do
             for ((i=0;i<$nb_exp;i++)); do 
                 folder="generator/${dim}D/${N}N/SEP${sep}"
                 dataset="${folder}/points.csv"
                 echo $dataset
                 
                 M=$(($N/$MC))
-                old_loc_report="SKIP_CHUNKS/reports/${N}N_${M}M_${dim}D_${k}K_${d_max}L"
-                report="SKIP_CHUNKS/reports/SEP${sep}/${N}N_${M}M_${dim}D_${k}K_${d_max}L_EXP${i}"
+                old_loc_report="SKIP_CHUNKS/reports/${N}N_${M}M_${dim}D_${k}K_${skp}SKP"
+                report="SKIP_CHUNKS/reports/SKIP_PARAM/SEP${sep}/${N}N_${M}M_${dim}D_${k}K_${skp}SKP_EXP${i}"
                 echo $report
                 
-                echo -n "$sep," | tee -a SKIP_CHUNKS/reports/log_skip_chunk.csv
+                echo -n "$sep," | tee -a SKIP_CHUNKS/reports/log_skip_chunk_precision.csv
 
                 (
                     scripts/prog_script_cache
                 ) && (
-                    gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
+                    gcc -g SKIP_CHUNKS/kmlio_skip_chunk_param.c -o SKIP_CHUNKS/kmlio_skip_chunk_param -lm -D _GNU_SOURCE
                 ) && (
-                    SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max 5
+                    SKIP_CHUNKS/kmlio_skip_chunk_param $dataset $k $N $M $dim $skp 5
                 
                 ) && (
 
@@ -50,7 +50,7 @@ for sep in "0.2" ; do
                 
                 ) && ( ###################
 
-                    Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max $i
+                    Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $skp $i
                 ) &&(
                     chmod 777 -R .
                 )

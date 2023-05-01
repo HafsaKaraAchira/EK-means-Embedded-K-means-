@@ -1734,7 +1734,7 @@ int main (int argc, char **argv){
 
 	printf ("delta solution_type %f solution obtenue %f : %lf\n",sse_solution,sse_result,(sse_result-sse_solution)); 
 
-	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
+	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk_precision.csv","at") ;
 	fprintf(fl,",%lf,%lf,",(sse_result-sse_solution),(sse_result-sse_solution)/sse_solution);
 
 	free(X);
