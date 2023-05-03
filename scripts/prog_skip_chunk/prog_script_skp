@@ -7,20 +7,23 @@ N=$2
 dim=$3
 MEM_SIZE=$4
 nb_exp=$5
+skip_offset=9
+exp_offset=4
 # 10 , 8 , 5 , 4 , 2
 # 280, 330 , 500 , 610 , 1155
 
 # "-0.6" "-0.5" "-0.4" "-0.3" "-0.2" "-0.1" "0.0" "0.1" "0.2" "0.3" "0.4" "0.5"
-# "0.3" "0.2" "0.0" 
-# "0.5" "0.4" "0.1" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5"
+# "0.3" "0.2" "0.1" "0.0" "-0.1" "-0.2" "-0.3"
 
-for sep in "-0.2" ; do
+# "0.5" "0.4" "-0.4" "-0.5"
+
+for sep in "0.4" ; do
     mkdir -p SKIP_CHUNKS/reports/SKIP_PARAM/SEP${sep}
     for MC in 10 # 33 dmax values
     do 
         scripts/prog_script_cgroup $MEM_SIZE
-        for ((skp=$(($MC-1));skp>=0;skp--)); do
-            for ((i=0;i<$nb_exp;i++)); do 
+        for ((skp=$(($MC-1 - $skip_offset));skp>=0;skp--)); do
+            for ((i=$exp_offset;i<$nb_exp;i++)); do 
                 folder="generator/${dim}D/${N}N/SEP${sep}"
                 dataset="${folder}/points.csv"
                 echo $dataset
@@ -48,7 +51,9 @@ for sep in "-0.2" ; do
                 ) && (
                     SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
                 
-                ) && ( ###################
+                ) && 
+                
+                ( ###################
 
                     Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $skp $i
                 ) &&(
