@@ -17,7 +17,7 @@ exp_offset=4
 
 # "0.5" "0.4" "-0.4" "-0.5"
 
-for sep in "0.4" ; do
+for sep in "-0.3" ; do
     mkdir -p SKIP_CHUNKS/reports/SKIP_PARAM/SEP${sep}
     for MC in 10 # 33 dmax values
     do 
