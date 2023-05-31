@@ -108,6 +108,7 @@ struct chunk_stats
 	double chunk_real_delay ;
 	double chunk_rem_checkpoint ;
 	int km_nb_iterations ;
+	int skp_stat ;
 	long freq ;
 };
 typedef struct chunk_stats chunk_stats;
@@ -116,7 +117,7 @@ int chunk_ind = 0;
 
 int skp_chk = 0 ;
 int D_max ;
-double beta = 0 ;
+double beta ;
 int nb_it_sample = 1 ;
 
 struct timeval km_it_start , kmlio_start, kmlio_end;
@@ -325,6 +326,8 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 	skip_chunk_solution skip_chk_sols[(N/M) - chunk_ind] ;
 	double rem_time ;
 
+	printf("\nstart updating the skip chunk\n") ;
+
 	while(skp < (N/M) - chunk_ind){
 		f = get_optimal_freq(N,M,skp,&found,&estimated_curr_chunk_delay,&rem_time) ;
 		if( found == 1 ){
@@ -333,6 +336,8 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 			kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_curr_chunk_delay ;
 			kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
 			kmlio_chunks_stats[chunk_ind].freq = f ;
+			kmlio_chunks_stats[chunk_ind].skp_stat = skp ;
+
 			return;
 		}
 		else
@@ -363,7 +368,7 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 	// 	kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_curr_chunk_delay ;
 	// }
 
-	// printf("for beta = %f optimal solution found = %d {skip_chunk = %d, opt_freq = %ld, estimated_chunk_delay = %f }\n",beta,( sol_ind > 0 ),skp_chk,(*freq),kmlio_chunks_stats[chunk_ind].chunk_estimated_delay) ;
+	printf("for beta = %f optimal solution found = %d {skip_chunk = %d, opt_freq = %ld, estimated_chunk_delay = %f }\n",beta,( sol_ind > 0 ),skp_chk,(*freq),kmlio_chunks_stats[chunk_ind].chunk_estimated_delay) ;
 }
 
 
@@ -376,7 +381,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
 
 	// log kmlio dataset properties : N, DIM , K , M , DMAX , TOTAL kmlio time
-	fprintf(fl,"%ld,%ld,%ld,%ld,%lf,%lf,%d,%lf,",N,taille,dim,k,D_max,beta,skp_chk,calc_delai_time(kmlio_start,kmlio_end));
+	fprintf(fl,"%ld,%ld,%ld,%ld,%.3f,%.3f,%d,%lf,",N,taille,dim,k,D_max,beta,skp_chk,calc_delai_time(kmlio_start,kmlio_end));
 
 	// LOG PROBLEM CONSTANT :
 
@@ -395,7 +400,19 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 			T_all_iteration += kmeans_iterations_durations[m*MAX_ITERATIONS+it] ;
 		}
 		double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_estimated_delay - kmlio_chunks_stats[m].chunk_real_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
-		fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;T_all_it\":%f;\"remaining_time\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_rem_checkpoint,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error,(m==(N/taille)?"":",")) ;
+		// fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;\"skp\":%d;T_all_it\":%f;\"remaining_time\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_rem_checkpoint,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error,(m==(N/taille)?"":",")) ;
+		fprintf(fl,"\"chunk_%d\":(%d;%ld;%d;%f;%f;%f;%f;%.4f)%s",
+																m,
+																kmlio_chunks_stats[m].km_nb_iterations,
+																kmlio_chunks_stats[m].freq/1000000,
+																kmlio_chunks_stats[m].skp_stat,
+																T_all_iteration,
+																kmlio_chunks_stats[m].chunk_rem_checkpoint,
+																kmlio_chunks_stats[m].chunk_estimated_delay,
+																kmlio_chunks_stats[m].chunk_real_delay,
+																chunk_delay_error,
+																(m==(N/taille)?"":",")
+															) ;
 	}
 	fprintf(fl,"}");
 
@@ -1916,24 +1933,27 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 			// printf("chunk id %d completed\n",m) ;
 			chunk_ind ++ ;
 			if( chunk_ind < (N/taille) ){
+				printf(" chunks to tolerate loss =  %d , chunks to skip = %d , switch strategy test = %d\n",(int)floor(beta * (N/taille)) , skp_chk, (int)floor(beta * (N/taille)) >= skp_chk) ;
 
-				if(beta * (N/taille) >= skp_chk){
+				if( (int)floor(beta * (N/taille)) < skp_chk ){  // if the number of  chunks to skip is greater than the data loss percentage , we 
 					decide_skip_chunk(N,taille,&freq) ;
 					
 				}else{
 					// set_frequency(available_frequencies[nb_available_frequencies-1]) ;
-
+					printf("same skip chunk=%d get optimal freq\n",skp_chk) ;
 					int found  = 0 ;
 					double estimated_chunk_delay  = 0 , rem_time = 0;
 
-					long freq = get_optimal_freq(N,taille,skp_chk,&found,&estimated_chunk_delay,&rem_time) ;
+					freq = get_optimal_freq(N,taille,skp_chk,&found,&estimated_chunk_delay,&rem_time) ;
 
 					kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_chunk_delay ;
 					kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
 					kmlio_chunks_stats[chunk_ind].freq = freq ;
+					kmlio_chunks_stats[chunk_ind].skp_stat = skp_chk ;
 
-					set_frequency(freq) ;
 				}
+
+				// set_frequency(freq) ;
 
 				// ////////////////////////////////////
 				
@@ -2150,7 +2170,8 @@ int main(int argc, char **argv)
 	dim = atoi(argv[5]);
 	D_max = atoi(argv[6]);	// kmlio maximal delay time in seconds
 	nb_it_sample = (argc>7?atoi(argv[7]):1) ;	// number of samples that enter in calculating iteration avg time
-	beta = (argc>8?atoi(argv[8]):0) ;	// precison - energy tendency factor for skip chunk strategy
+	beta = (argc>8?atof(argv[8]):0) ;	// precison - energy tendency factor for skip chunk strategy
+
 	skp_chk = 0 ;
 	
 	srand(time(NULL));
