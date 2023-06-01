@@ -458,7 +458,7 @@ void set_frequency(long freq)
 	// printf("set speed in hz %ld in khz %ld\n",set_speed,(set_speed/1000));
 	// system("echo userspace | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor") ;
 	char *cmd ;
-	asprintf(&cmd, "cpufreq-set -c 4 -f %d",(set_speed/1000)) ;
+	asprintf(&cmd, "cpufreq-set -c 4 -f %ld",(set_speed/1000)) ;
 	system(cmd) ;
 
 	// free(cmd) ;
