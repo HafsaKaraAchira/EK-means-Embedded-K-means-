@@ -374,14 +374,14 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 
 void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double * centroid){
 	char*  dirname ;
-	asprintf(&dirname,"SKIP_CHUNKS/reports/%ldN_%ldM_%ldD_%ldK_%dL_%.2fbeta",N,taille,dim,k,(int)D_max,beta) ;
+	asprintf(&dirname,"SKIP_CHUNKS/reports/%dN_%dM_%dD_%dK_%dL_%.2fbeta",N,taille,dim,k,(int)D_max,beta) ;
 	int check = mkdir(dirname,0777);
 	sleep(5);
 
 	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
 
 	// log kmlio dataset properties : N, DIM , K , M , DMAX , TOTAL kmlio time
-	fprintf(fl,"%ld,%ld,%ld,%ld,%.3f,%.3f,%d,%lf,",N,taille,dim,k,D_max,beta,skp_chk,calc_delai_time(kmlio_start,kmlio_end));
+	fprintf(fl,"%d,%d,%d,%d,%.3f,%.3f,%d,%lf,",N,taille,dim,k,D_max,beta,skp_chk,calc_delai_time(kmlio_start,kmlio_end));
 
 	// LOG PROBLEM CONSTANT :
 
