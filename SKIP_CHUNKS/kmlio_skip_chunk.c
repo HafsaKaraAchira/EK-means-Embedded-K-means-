@@ -458,7 +458,7 @@ void set_frequency(long freq)
 	// printf("set speed in hz %ld in khz %ld\n",set_speed,(set_speed/1000));
 	// system("echo userspace | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor") ;
 	char *cmd ;
-	asprintf(&cmd, "echo %ld | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_setspeed",(set_speed/1000)) ;
+	asprintf(&cmd, "cpufreq-set -c 4 -f %d",(set_speed/1000)) ;
 	system(cmd) ;
 
 	// free(cmd) ;
@@ -468,7 +468,7 @@ void set_frequency(long freq)
 void set_governor(char * gov)
 {
 	char *cmd ;
-	asprintf(&cmd, "echo %s | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor",gov) ;
+	asprintf(&cmd, "cpufreq-set -c 4 -g %s",gov) ;
 	system(cmd) ;
 }
 
@@ -2138,8 +2138,8 @@ int main(int argc, char **argv)
 	cpu_set_t set;
 	// clear cpu mask
 	CPU_ZERO(&set);
-	// set cpu 0
-	CPU_SET(0, &set);
+	// set cpu 4
+	CPU_SET(4, &set);
 	// 0 is the calling process
 	sched_setaffinity(0, sizeof(cpu_set_t), &set);
 	// set priority
