@@ -50,10 +50,10 @@ for sep in "-0.2" "0.0" "0.2" ; do
 
                         mv $old_loc_report $report
                     ) &&
-                    ( ###################
+                    # ( ###################
 
-                        gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
-                    ) &&
+                        # gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
+                    # ) &&
                     #  (
                     #     SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
                     
@@ -65,6 +65,12 @@ for sep in "-0.2" "0.0" "0.2" ; do
                     ) &&
                     (
                         chmod 777 -R .
+                    ) &&
+                    (
+                        git commit -a -m "execution complete SEP${sep} ${N}N ${M}M ${dim}D ${k}K ${d_max}L ${beta}beta EXP${i}"
+                    )  &&
+                    (
+                        git push
                     )
                 done
             done
