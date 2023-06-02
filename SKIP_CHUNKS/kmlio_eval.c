@@ -1665,14 +1665,17 @@ int main (int argc, char **argv){
 	char * result_centers ;
 	asprintf(&result_centers,"%s/result_centers.csv",report) ;
 	double * cluster_centroid = r8mat_data_read (result_centers,dim,k) ;
+	printf("centers read complete\n") ;
 	
 	//get the distance matrix witween each paire of point-center
 	double *dist = (double *)malloc(sizeof(double) * N * k);
    	calc_all_distances(dim, N, k, X, cluster_centroid, dist);
+	printf("distance computations complete\n") ;
    	
 	//get the clustring result points assignement using the distance matrix
 	int * cluster_assignment_final = (int *) malloc(N*sizeof(int)); 
    	choose_all_clusters_from_distances(dim,N, k, dist, cluster_assignment_final);
+	printf("assignement computation complete\n") ;
 
 	//save the result clustreing of dataset points in file for later use
 	char * result_clusters_file_name ;
