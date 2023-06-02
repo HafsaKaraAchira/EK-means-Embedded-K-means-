@@ -1,0 +1,7 @@
+#!/bin/bash
+
+mkdir /sys/fs/cgroup/kmeans
+
+echo "+cpuset" >/sys/fs/cgroup/cgroup.subtree_control
+echo "+io" >/sys/fs/cgroup/cgroup.subtree_control
+echo "+memory" >/sys/fs/cgroup/cgroup.subtree_control
