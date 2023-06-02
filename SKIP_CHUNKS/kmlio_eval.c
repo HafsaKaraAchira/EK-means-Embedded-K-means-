@@ -690,7 +690,7 @@ int   *cluster_assignment_prev = NULL;
   }           
 
 int *mark(char *source, size_t dim, size_t N, int chunk_size){
-	int  * marks= (int *) malloc (sizeof(int)*(N/chunk_size));
+	int  * marks= (int *) malloc (sizeof(int)*(N/chunk_size)+1);
 	char line[100000];
 	FILE *src = fopen(source, "r+"); char delim[3]="\t"; 
 	char *token; 
