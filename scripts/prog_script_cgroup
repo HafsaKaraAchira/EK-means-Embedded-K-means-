@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-echo $(($1 * 1024 * 1024)) > /sys/fs/cgroup/memory/memory.high
-cat /sys/fs/cgroup/memory/memory.high
+echo $(($1 * 1024 * 1024)) > /sys/fs/cgroup/memory/kmeans/memory.high
+cat /sys/fs/cgroup/memory/kmeans/memory.high
 
 # mkdir -p /sys/fs/cgroup/memory/kmeans
 # sysctl vm.swappiness=5
