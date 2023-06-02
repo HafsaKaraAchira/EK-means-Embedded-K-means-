@@ -42,29 +42,32 @@ for sep in "-0.2" "0.0" "0.2" ; do
                     (
                         scripts/prog_script_cache
                     ) 
-                    # && (
-                    #     gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
-                    # ) && (
-                    #     SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max $nb_sample_it $beta
+                    && (
+                        gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
+                    ) && (
+                        SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max $nb_sample_it $beta
                     
-                    # ) && (
+                    ) && (
 
-                    #     mv $old_loc_report $report
+                        mv $old_loc_report $report
+                    ) &&
+                    # ( ###################
+
+                    #     gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
                     # ) &&
-                    ( ###################
-
-                        gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
-                    ) &&
-                     (
-                        SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
+                    #  (
+                    #     SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
                     
-                    ) &&
-                    ( ###################
+                    # ) &&
+                    # ( ###################
 
-                        Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max $beta $i
-                    ) &&
+                    #     Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max $beta $i
+                    # ) &&
                     (
                         chmod 777 -R .
+                    )  &&
+                    (
+                        git add $report
                     ) &&
                     (
                         git commit -a -m "execution complete SEP${sep} ${N}N ${M}M ${dim}D ${k}K ${d_max}L ${beta}beta EXP${i}"
