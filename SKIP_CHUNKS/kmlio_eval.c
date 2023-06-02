@@ -1660,6 +1660,7 @@ int main (int argc, char **argv){
 	
 	//read all the dataset
 	X = getmatrix(source, dim, N,N,0, marks);
+	printf("datapoints read complete\n") ;
 	
 	//get the clustering result centers
 	char * result_centers ;
