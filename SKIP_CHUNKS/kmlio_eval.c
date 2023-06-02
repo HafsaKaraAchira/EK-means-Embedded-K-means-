@@ -1678,67 +1678,69 @@ int main (int argc, char **argv){
 	char * result_clusters_file_name ;
 	asprintf(&result_clusters_file_name,"%s/result_clusters.csv",report) ;
 	i4mat_write(result_clusters_file_name,1,N,cluster_assignment_final) ;
+
+	printf("datapoints assignement write complete\n") ;
 	
-	//calculate sse 
-	double sse_result = sse_calculate (X, dim, cluster_centroid, cluster_assignment_final ,N) ;
+	// //calculate sse 
+	// double sse_result = sse_calculate (X, dim, cluster_centroid, cluster_assignment_final ,N) ;
 
-	//read the real classes centers and real asignnmenet of points
-	char * solution_centers_file_name ;
-	asprintf(&solution_centers_file_name,"%s/real_centers_norm.csv",folder) ;
-	char * solution_assignment_file_name ;
-	asprintf(&solution_assignment_file_name,"%s/real_classes.csv",folder) ;
+	// //read the real classes centers and real asignnmenet of points
+	// char * solution_centers_file_name ;
+	// asprintf(&solution_centers_file_name,"%s/real_centers_norm.csv",folder) ;
+	// char * solution_assignment_file_name ;
+	// asprintf(&solution_assignment_file_name,"%s/real_classes.csv",folder) ;
 
-	char *token; 
-	char tmp[1000000]; 
-	char delim[3] = "\t"; 
-	int index=0, index2;  
-	double delta=0; 
+	// char *token; 
+	// char tmp[1000000]; 
+	// char delim[3] = "\t"; 
+	// int index=0, index2;  
+	// double delta=0; 
 	
-	FILE *c_solution = fopen (solution_centers_file_name, "r"); 
-	double * solution_centroid = (double *) malloc (sizeof(double) * k * dim);
-	printf("Real clusters %ld\n", k);
-	while(!feof(c_solution)){
-		fgets (tmp, 1000000, c_solution); 
-		token = strtok(tmp, delim); 
-		while (token != NULL){
-			solution_centroid[index] = atof(token); 
-			printf("%f\t",solution_centroid[index]) ;
-			index++;
-			token = strtok(NULL, delim); 	
-		}
-		printf("\n") ;
-	}
-	fclose(c_solution); 
+	// FILE *c_solution = fopen (solution_centers_file_name, "r"); 
+	// double * solution_centroid = (double *) malloc (sizeof(double) * k * dim);
+	// printf("Real clusters %ld\n", k);
+	// while(!feof(c_solution)){
+	// 	fgets (tmp, 1000000, c_solution); 
+	// 	token = strtok(tmp, delim); 
+	// 	while (token != NULL){
+	// 		solution_centroid[index] = atof(token); 
+	// 		printf("%f\t",solution_centroid[index]) ;
+	// 		index++;
+	// 		token = strtok(NULL, delim); 	
+	// 	}
+	// 	printf("\n") ;
+	// }
+	// fclose(c_solution); 
 
-	FILE *a_solution = fopen (solution_assignment_file_name, "r"); 
-	int * solution_assignment = (int *) malloc (sizeof(int) * N);
-	index=0 ;
+	// FILE *a_solution = fopen (solution_assignment_file_name, "r"); 
+	// int * solution_assignment = (int *) malloc (sizeof(int) * N);
+	// index=0 ;
 
-	while(!feof(a_solution)){
-		fgets (tmp, 1000000, a_solution); 
-		token = strtok(tmp, delim); 
-		while (token != NULL){
-			solution_assignment[index] = atoi(token); 
-			// printf("%f\t",solution_assignment[index]) ;
-			index++;
-			token = strtok(NULL, delim); 	
-		}
-		printf("\n") ;
-	}
-	fclose(a_solution); 
+	// while(!feof(a_solution)){
+	// 	fgets (tmp, 1000000, a_solution); 
+	// 	token = strtok(tmp, delim); 
+	// 	while (token != NULL){
+	// 		solution_assignment[index] = atoi(token); 
+	// 		// printf("%f\t",solution_assignment[index]) ;
+	// 		index++;
+	// 		token = strtok(NULL, delim); 	
+	// 	}
+	// 	printf("\n") ;
+	// }
+	// fclose(a_solution); 
 
 
-	// calculate the distance matrix for real dataset classes-points and calculate the rel sse
-	calc_all_distances(dim, N, k, X, solution_centroid, dist);
-	double sse_solution = sse_calculate (X, dim, solution_centroid, solution_assignment ,N) ;
+	// // calculate the distance matrix for real dataset classes-points and calculate the rel sse
+	// calc_all_distances(dim, N, k, X, solution_centroid, dist);
+	// double sse_solution = sse_calculate (X, dim, solution_centroid, solution_assignment ,N) ;
 
-	printf ("delta solution_type %f solution obtenue %f : %lf\n",sse_solution,sse_result,(sse_result-sse_solution)); 
+	// printf ("delta solution_type %f solution obtenue %f : %lf\n",sse_solution,sse_result,(sse_result-sse_solution)); 
 
-	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
-	fprintf(fl,",%lf,%lf,",(sse_result-sse_solution),(sse_result-sse_solution)/sse_solution);
+	// FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
+	// fprintf(fl,",%lf,%lf,",(sse_result-sse_solution),(sse_result-sse_solution)/sse_solution);
 
-	free(X);
-	X = NULL;
+	// free(X);
+	// X = NULL;
 	
 	return 0;
 }
