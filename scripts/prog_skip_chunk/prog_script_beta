@@ -67,7 +67,7 @@ for sep in "-0.2" "0.0" "0.2" ; do
                         chmod 777 -R .
                     )  &&
                     (
-                        git add $report
+                        git add .
                     ) &&
                     (
                         git commit -a -m "execution complete SEP${sep} ${N}N ${M}M ${dim}D ${k}K ${d_max}L ${beta}beta EXP${i}"
