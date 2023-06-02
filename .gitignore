@@ -3,4 +3,3 @@ points*.csv
 git-old
 .git-old
 generator/*/
-SKIP_CHUNKS/reports/*/
