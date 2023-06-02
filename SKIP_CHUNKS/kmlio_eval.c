@@ -308,9 +308,9 @@ void i4mat_write ( char *output_filename, int m, int n, int table[] )
   int i;
   int j;
   FILE *output;
-/*
-  Open the file.
-*/
+	/*
+	Open the file.
+	*/
   output = fopen ( output_filename, "wt" );
 
   if ( !output )
@@ -1678,9 +1678,14 @@ int main (int argc, char **argv){
    	choose_all_clusters_from_distances(dim,N, k, dist, cluster_assignment_final);
 	printf("assignement computation complete\n") ;
 
+	
+	free(X);
+	X = NULL;
+
 	//save the result clustreing of dataset points in file for later use
 	char * result_clusters_file_name ;
 	asprintf(&result_clusters_file_name,"%s/result_clusters.csv",report) ;
+	printf("file : %s\n",result_clusters_file_name) ;
 	i4mat_write(result_clusters_file_name,1,N,cluster_assignment_final) ;
 
 	printf("datapoints assignement write complete\n") ;
@@ -1743,8 +1748,6 @@ int main (int argc, char **argv){
 	// FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
 	// fprintf(fl,",%lf,%lf,",(sse_result-sse_solution),(sse_result-sse_solution)/sse_solution);
 
-	// free(X);
-	// X = NULL;
 	
 	return 0;
 }
