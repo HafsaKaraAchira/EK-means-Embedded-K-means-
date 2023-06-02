@@ -41,8 +41,7 @@ for sep in "-0.2" "0.0" "0.2" ; do
 
                     (
                         scripts/prog_script_cache
-                    ) 
-                    && (
+                    ) && (
                         gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
                     ) && (
                         SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max $nb_sample_it $beta
