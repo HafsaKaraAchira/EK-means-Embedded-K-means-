@@ -212,7 +212,7 @@ long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * est
 	long freq = available_frequencies[nb_available_frequencies-1] ;
 
 	if(chunk_ind == 1){
-		if(skip_chunk == 0){
+		if(skip_chunk == 0 || skip_chunk == skp_chk){
 			// real_time.km_1_iteration_time = calc_history_past_time(km_it_start) / ( kmlio_chunks_stats[0].km_nb_iterations - nb_it_sample ) ;
 			real_time.C_1_it_elem =  ( ( real_time.C_1_it_elem * nb_it_sample * M )  + ( calc_history_past_time(km_it_start) * set_speed ) ) / (kmlio_chunks_stats[0].km_nb_iterations * M) ;
 			real_time.km_1_iteration_time = real_time.C_1_it_elem * M / freq ;
