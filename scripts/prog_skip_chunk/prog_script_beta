@@ -46,7 +46,7 @@ for sep in "-0.2" ; do
                     ) && (
                         gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
                     ) && (
-                        SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max $nb_sample_it $beta
+                        cgexec -g cpuset,memory,io:kmeans taskset -c 4 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max $nb_sample_it $beta
                     
                     ) && (
 
