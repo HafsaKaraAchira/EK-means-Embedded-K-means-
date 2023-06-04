@@ -16,17 +16,18 @@ nb_sample_it=5
 # "0.00" "0.15" "0.25" "0.30" "0.45" "0.50" "0.60" "0.75" "0.90" "1.00"
 # "0.00" "0.25" "0.50" "0.75" 
 #  "-0.2" 
+# "0.00" 
 
 # scripts/prog_skip_chunk/prog_script_beta 10 3355450 10 180 5
 
-for sep in "0.0" "0.2" ; do
+for sep in "-0.2" ; do
     mkdir -p SKIP_CHUNKS/reports/SEP${sep}
     for MC in 10 # 33 dmax values
     do 
         scripts/prog_script_cgroup $MEM_SIZE
-        for d_max in {300..900..150}    # 10 dmax values
+        for d_max in 900    # 450 750  #{300..900..150}    # 10 dmax values
         do
-            for beta in "0.00" "0.25" "0.50" "0.75" "1.00"    # 10 beta values
+            for beta in "0.25" "0.50" "0.75" "1.00"    # 10 beta values
             do
                 for ((i=0;i<$nb_exp;i++)); do 
                     folder="generator/${dim}D/${N}N/SEP${sep}"
