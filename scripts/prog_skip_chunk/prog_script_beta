@@ -20,7 +20,7 @@ nb_sample_it=5
 
 # scripts/prog_skip_chunk/prog_script_beta 10 3355450 10 180 5
 
-for sep in "1.0" ; do
+for sep in "1.1" ; do
     mkdir -p SKIP_CHUNKS/reports/SEP${sep}
     for MC in 10 # 33 dmax values
     do 
@@ -30,7 +30,7 @@ for sep in "1.0" ; do
             for beta in "1.00"    # 10 beta values "0.00" "0.25" "0.50" "0.75" 
             do
                 for ((i=0;i<$nb_exp;i++)); do 
-                    folder="generator/real_dataset/uci_har" #"generator/${dim}D/${N}N/SEP${sep}"
+                    folder="generator/real_dataset/covertype" #"generator/${dim}D/${N}N/SEP${sep}"
                     dataset="${folder}/points.csv"
                     echo $dataset
                     
