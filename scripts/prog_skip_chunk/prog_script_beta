@@ -25,7 +25,7 @@ for sep in "1.1" ; do
     for MC in 10 # 33 dmax values
     do 
         # scripts/prog_script_cgroup $MEM_SIZE
-        for d_max in 30 #{300..900..150}    # 10 dmax values
+        for d_max in {300..900..150}    # 10 dmax values
         do
             for beta in "1.00"    # 10 beta values "0.00" "0.25" "0.50" "0.75" 
             do
