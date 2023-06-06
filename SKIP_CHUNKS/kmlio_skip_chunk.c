@@ -371,7 +371,7 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 	// 	kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_curr_chunk_delay ;
 	// }
 
-	printf("for beta = %f optimal solution found = %d {skip_chunk = %d, opt_freq = %ld, estimated_chunk_delay = %f }\n",beta,( sol_ind > 0 ),skp_chk,(*freq),kmlio_chunks_stats[chunk_ind].chunk_estimated_delay) ;
+	// printf("for beta = %f optimal solution found = %d {skip_chunk = %d, opt_freq = %ld, estimated_chunk_delay = %f }\n",beta,( sol_ind > 0 ),skp_chk,(*freq),kmlio_chunks_stats[chunk_ind].chunk_estimated_delay) ;
 }
 
 
@@ -1936,25 +1936,25 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 			// printf("chunk id %d completed\n",m) ;
 			chunk_ind ++ ;
 			if( chunk_ind < (N/taille) ){
-				printf(" chunks to tolerate loss =  %d , chunks to skip = %d , switch strategy test = %d\n",(int)floor(beta * (N/taille)) , skp_chk, (int)floor(beta * (N/taille)) >= skp_chk) ;
+				// printf(" chunks to tolerate loss =  %d , chunks to skip = %d , switch strategy test = %d\n",(int)floor(beta * (N/taille)) , skp_chk, (int)floor(beta * (N/taille)) >= skp_chk) ;
 
-				if( (int)floor(beta * (N/taille)) < skp_chk ){  // if the number of  chunks to skip is greater than the data loss percentage , we 
-					decide_skip_chunk(N,taille,&freq) ;
+				// if( (int)floor(beta * (N/taille)) < skp_chk ){  // if the number of  chunks to skip is greater than the data loss percentage , we 
+				// 	decide_skip_chunk(N,taille,&freq) ;
 					
-				}else{
-					// set_frequency(available_frequencies[nb_available_frequencies-1]) ;
-					printf("same skip chunk=%d get optimal freq\n",skp_chk) ;
-					int found  = 0 ;
-					double estimated_chunk_delay  = 0 , rem_time = 0;
+				// }else{
+				// set_frequency(available_frequencies[nb_available_frequencies-1]) ;
+				printf("same skip chunk=%d get optimal freq for chunk %d\n",skp_chk,chunk_ind) ;
+				int found  = 0 ;
+				double estimated_chunk_delay  = 0 , rem_time = 0;
 
-					freq = get_optimal_freq(N,taille,skp_chk,&found,&estimated_chunk_delay,&rem_time) ;
+				freq = get_optimal_freq(N,taille,skp_chk,&found,&estimated_chunk_delay,&rem_time) ;
 
-					kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_chunk_delay ;
-					kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
-					kmlio_chunks_stats[chunk_ind].freq = freq ;
-					kmlio_chunks_stats[chunk_ind].skp_stat = skp_chk ;
+				kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_chunk_delay ;
+				kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
+				kmlio_chunks_stats[chunk_ind].freq = freq ;
+				kmlio_chunks_stats[chunk_ind].skp_stat = skp_chk ;
 
-				}
+				// }
 
 				// set_frequency(freq) ;
 
