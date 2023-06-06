@@ -52,18 +52,18 @@ for sep in "1.1" ; do
 
                         mv $old_loc_report $report
                     ) &&
-                    ( ###################
+                    # ( ###################
 
-                        gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
-                    ) &&
-                     (
-                        SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
+                    #     gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
+                    # ) &&
+                    #  (
+                    #     SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
                     
-                    ) &&
-                    ( ###################
+                    # ) &&
+                    # ( ###################
 
-                        Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max $beta $i
-                    ) &&
+                    #     Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max $beta $i
+                    # ) &&
                     (
                         chmod 777 -R .
                     )  
