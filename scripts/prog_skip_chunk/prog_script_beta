@@ -8,6 +8,7 @@ dim=$3
 MEM_SIZE=$4
 nb_exp=$5
 nb_sample_it=5
+
 # 10 , 8 , 5 , 4 , 2
 # 280, 330 , 500 , 610 , 1155
 
@@ -74,7 +75,7 @@ for sep in "1.1" ; do
                         git add .
                     ) &&
                     (
-                        git commit -a -m "execution complete SEP${sep} ${N}N ${M}M ${dim}D ${k}K ${d_max}L ${beta}beta EXP${i}"
+                        git commit -a -m "execution complete covertype ${N}N ${M}M ${dim}D ${k}K ${d_max}L ${beta}beta EXP${i}"
                     )  &&
                     (
                         git push
