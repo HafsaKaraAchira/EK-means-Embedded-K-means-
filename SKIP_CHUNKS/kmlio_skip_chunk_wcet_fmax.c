@@ -349,7 +349,7 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 
 	// skp_chk = skp ;
 	skp_chk = 0 ;
-	
+
 	(*freq) = 0 ;
 	kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_curr_chunk_delay ;
 	kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
@@ -2205,7 +2205,7 @@ int main(int argc, char **argv)
 
 	
 
-	// kmlio_diag(k,dim,N,taille,D_max,centroid) ;
+	kmlio_diag(k,dim,N,taille,D_max,centroid) ;
 
 	printf("KMLIO EXECUTION REPORT READY\n") ;
 
