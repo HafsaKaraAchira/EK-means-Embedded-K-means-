@@ -1057,7 +1057,7 @@ void kmeans(
 		int change_count = assignment_change_count(n, cluster_assignment_cur, cluster_assignment_prev);
 
 		// done with this phase if nothing has changed
-		if (change_count == 0){break;}
+		// if (change_count == 0){break;}
 
 		prev_totD = totD;
 		(*batch_iteration)++;
