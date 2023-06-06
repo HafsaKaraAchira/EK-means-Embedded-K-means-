@@ -25,7 +25,7 @@ for sep in "1.1" ; do
     for MC in 10 # 33 dmax values
     do 
         # scripts/prog_script_cgroup $MEM_SIZE
-        for d_max in 350 #{300..900..150}    # 10 dmax values
+        for d_max in 3600 #{300..900..150}    # 10 dmax values
         do
             for beta in "1.00"    # 10 beta values "0.00" "0.25" "0.50" "0.75" 
             do
@@ -44,7 +44,7 @@ for sep in "1.1" ; do
                     (
                         scripts/prog_script_cache
                     ) && (
-                        gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
+                        gcc -g SKIP_CHUNKS/kmlio_skip_chunk_wcet_fmax.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
                     ) && (
                         cgexec -g cpuset,memory,io:kmeans taskset -c 4 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max $nb_sample_it $beta
                     
