@@ -307,6 +307,8 @@ long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * est
 		}
 		freq = available_frequencies[min] ;
 	}
+	
+	freq = available_frequencies[nb_available_frequencies-1] ;
 
 	(*estimated_curr_chunk_delay) = (*estimated_curr_chunk_delay) / freq  + curr_chunk_read_time ;
 
