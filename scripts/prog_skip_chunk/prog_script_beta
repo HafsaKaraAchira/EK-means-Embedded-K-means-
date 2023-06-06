@@ -18,7 +18,7 @@ nb_sample_it=5
 # "0.00" "0.25" "0.50" "0.75" 
 #  "-0.2" 
 
-#  for covertype : 80 160 320 480 640 720 800
+#  for covertype : 80 160 320 480 640 720 800 fix
 
 
 # scripts/prog_skip_chunk/prog_script_beta 10 3355450 10 180 5
