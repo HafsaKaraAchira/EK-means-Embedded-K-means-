@@ -42,44 +42,44 @@ for sep in "1.1" ; do
                     report="SKIP_CHUNKS/reports/SEP${sep}/${N}N_${M}M_${dim}D_${k}K_${d_max}L_${beta}beta_EXP${i}"
                     echo $report
                     
-                    echo -n -e "\n$sep," | tee -a SKIP_CHUNKS/reports/log_skip_chunk.csv
+                    # echo -n -e "\n$sep," | tee -a SKIP_CHUNKS/reports/log_skip_chunk.csv
 
-                    (
-                        scripts/prog_script_cache
-                    ) && 
-                    (
-                        gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
-                    ) && 
-                    (
-                        cgexec -g cpuset,memory,io:kmeans taskset -c 4 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max $nb_sample_it $beta
-                    ) && 
-                    (
-                        mv $old_loc_report $report
+                    # (
+                    #     scripts/prog_script_cache
+                    # ) && 
+                    # (
+                    #     gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
+                    # ) && 
+                    # (
+                    #     cgexec -g cpuset,memory,io:kmeans taskset -c 4 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max $nb_sample_it $beta
+                    # ) && 
+                    # (
+                    #     mv $old_loc_report $report
+                    # ) &&
+                    ( ###################
+
+                        gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
                     ) &&
-                    # ( ###################
-
-                    #     gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
-                    # ) &&
-                    #  (
-                    #     SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
+                     (
+                        SKIP_CHUNKS/kmlio_eval $folder $k $N $M $dim $report
                     
-                    # ) &&
-                    # ( ###################
+                    ) &&
+                    ( ###################
 
-                    #     Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max $beta $i
-                    # ) &&
+                        Rscript generator/cluster_evaluation.R $sep $N $M $k $dim $d_max $beta $i
+                    ) &&
                     (
                         chmod 777 -R .
-                    ) &&
-                    (
-                        git add .
-                    ) &&
-                    (
-                        git commit -a -m "execution complete covertype ${N}N ${M}M ${dim}D ${k}K ${d_max}L ${beta}beta EXP${i}"
-                    )  &&
-                    (
-                        git push
-                    )
+                    ) 
+                    # && (
+                    #     git add .
+                    # ) &&
+                    # (
+                    #     git commit -a -m "execution complete covertype ${N}N ${M}M ${dim}D ${k}K ${d_max}L ${beta}beta EXP${i}"
+                    # )  &&
+                    # (
+                    #     git push
+                    # )
                 done
             done
         done

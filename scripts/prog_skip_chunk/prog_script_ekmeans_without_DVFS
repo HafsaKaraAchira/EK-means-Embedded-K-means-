@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# scripts/prog_script_cgroup_create 
+
+# prog_script_ekmeans_without_DVFS $deadline
+
+# deadline values for covertype : 160 , 320 , 640 , 800 , coressponding to 1/4 ,1/2 , 1 , 5/4 of WCET(f_max)
+
+dataset="datasets/SEP0.0/points.csv"
+N=3355450
+k=10
+dim=10
+MEM_SIZE=180     # for N/M = 10 , assign 32
+nb_sample_it=5
+beta=1.00
+
+MC=10
+M=$(($N/$MC))
+
+d_max=$1
+
+(
+    scripts/prog_script_cache
+) && 
+(
+    gcc -g kmlio_skip_chunk_fmax.c -o kmlio_skip_chunk_fmax -lm -D _GNU_SOURCE
+) && 
+(
+    cgexec -g cpuset,memory,io:kmeans taskset -c 4 kmlio_skip_chunk_fmax $dataset $k $N $M $dim $d_max $nb_sample_it $beta
+)
