@@ -15,5 +15,9 @@
         "cstdint": "c",
         "typeinfo": "c"
     },
-    "r.lsp.promptToInstall": false
+    "r.lsp.promptToInstall": false,
+    "editor.tokenColorCustomizations": {
+        "comments": "",
+        "textMateRules": []
+    }
 }
