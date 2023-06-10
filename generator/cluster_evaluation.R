@@ -35,9 +35,10 @@ M <- args[8]
 K <- args[9]
 DIM <- args[10]
 DMAX <- args[11]
-EXP_ID <- args[12]
+BETA <- args[12]
+EXP_ID <- args[13]
 
-report <- sprintf("SKIP_CHUNKS/reports/SKIP_PARAM/SEP%s/%sN_%sM_%sD_%sK_%sSKP_EXP%s/",SEP,N,M,DIM,K,DMAX,EXP_ID)
+report <- sprintf("SKIP_CHUNKS/reports/SEP%s/%sN_%sM_%sD_%sK_%sL_%sbeta_EXP%s/",SEP,N,M,DIM,K,DMAX,BETA,EXP_ID)
 folder <- sprintf("generator/%sD/%sN/SEP%s/",DIM,N,SEP) 
 
 
@@ -118,7 +119,7 @@ dataplus <- data.frame(kmlio_err,kmlio_ari)
 
 write.table(
         dataplus,
-        "SKIP_CHUNKS/reports/log_skip_chunk_precision.csv",
+        "SKIP_CHUNKS/reports/log_skip_chunk.csv",
         quote = FALSE,
         col.names = FALSE,
         row.names = FALSE,
