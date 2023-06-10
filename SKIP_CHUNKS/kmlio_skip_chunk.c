@@ -316,7 +316,7 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 	}
 
 	skp_chk = skp ;
-	(*freq) = 0 ;
+	(*freq) = available_frequencies[nb_available_frequencies-1] ;
 	kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_curr_chunk_delay ;
 	kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
 
@@ -340,6 +340,7 @@ void set_frequency(long freq)
 	set_speed = freq ;
 	char *cmd ;
 	asprintf(&cmd, "cpufreq-set -c 4 -f %ld",(set_speed/1000)) ;
+	printf("%s\n",cmd);
 	system(cmd) ;
 
 	// free(cmd) ;
@@ -1490,7 +1491,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 					
 				// }else{
 				// set_frequency(available_frequencies[nb_available_frequencies-1]) ;
-				// // printf("same skip chunk=%d get optimal freq for chunk %d\n",skp_chk,chunk_ind) ;
+				printf("same skip chunk=%d get optimal freq for chunk %d\n",skp_chk,chunk_ind) ;
 				int found  = 0 ;
 				double estimated_chunk_delay  = 0 , rem_time = 0;
 
@@ -1723,13 +1724,13 @@ int main(int argc, char **argv)
 
 	set_governor("userspace") ;
 	
-	// gettimeofday(&kmlio_start, NULL); 
+	gettimeofday(&kmlio_start, NULL); 
 	
 	kmeans_by_chunk(source,dim, taille, N,k,&centroid) ;
 	
-	// gettimeofday(&kmlio_end, NULL) ;
+	gettimeofday(&kmlio_end, NULL) ;
 
-	// set_governor("conservative") ;
+	set_governor("conservative") ;
 
 	return 0;
 }
