@@ -1059,7 +1059,7 @@ void kmeans(
 		int change_count = assignment_change_count(n, cluster_assignment_cur, cluster_assignment_prev);
 
 		// done with this phase if nothing has changed
-		if (change_count == 0){break;}
+		//if (change_count == 0){break;}
 
 		prev_totD = totD;
 		(*batch_iteration)++;
@@ -1932,7 +1932,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 			// apply kmeans on the chunk m
 			cluster_assignment_final_Y = (int *)malloc(taille * sizeof(int));
 			kmeans(dim, Y,N,taille, k, (*cluster_centroid), cluster_assignment_final_Y, &kmeans_iterations, &kmeans_change_count);
-			
+		
 			//////////////////////////////////////
 
 			//get optimal frequency and skip chunk for the first chunk execution
