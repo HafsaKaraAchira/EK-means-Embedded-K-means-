@@ -1928,7 +1928,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 			// apply kmeans on the chunk m
 			cluster_assignment_final_Y = (int *)malloc(taille * sizeof(int));
 			kmeans(dim, Y,N,taille, k, (*cluster_centroid), cluster_assignment_final_Y, &kmeans_iterations, &kmeans_change_count);
-			
+		
 			//////////////////////////////////////
 
 			//get optimal frequency and skip chunk for the first chunk execution
