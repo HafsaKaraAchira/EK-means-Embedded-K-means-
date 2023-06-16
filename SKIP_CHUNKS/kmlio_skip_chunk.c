@@ -119,6 +119,7 @@ int skp_chk = 0 ;
 int D_max ;
 double beta ;
 int nb_it_sample = 1 ;
+int corrected = 0;
 
 struct timeval km_it_start , kmlio_start, kmlio_end;
 
