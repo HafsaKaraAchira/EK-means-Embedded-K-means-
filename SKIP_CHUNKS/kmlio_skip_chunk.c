@@ -146,6 +146,25 @@ long available_frequencies[] = {798000000,897000000,997000000,1097000000,1197000
 
 kmlio_time_estimation real_time ;
 
+void set_frequency(long freq)
+{
+	set_speed = freq ;
+	// printf("set speed in hz %ld in khz %ld\n",set_speed,(set_speed/1000));
+	// system("echo userspace | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor") ;
+	char *cmd ;
+	asprintf(&cmd, "echo %ld | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_setspeed",(set_speed/1000)) ;
+	system(cmd) ;
+
+	// free(cmd) ;
+	cmd = NULL ;
+}
+
+void set_governor(char * gov)
+{
+	char *cmd ;
+	asprintf(&cmd, "echo %s | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor",gov) ;
+	system(cmd) ;
+}
 
 double calc_delai_time(struct timeval tv_start,struct timeval tv_end){
 	return ((double)(tv_end.tv_usec - tv_start.tv_usec) / 1000000 + (double)(tv_end.tv_sec - tv_start.tv_sec) ) ;
@@ -450,27 +469,6 @@ void fail(char *str)
 // os.system("echo "+governor+" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
 // # os.system("cpupower -c all frequency-set -f "+str(freq))
 // # os.system("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed")
-
-
-void set_frequency(long freq)
-{
-	set_speed = freq ;
-	// printf("set speed in hz %ld in khz %ld\n",set_speed,(set_speed/1000));
-	// system("echo userspace | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor") ;
-	char *cmd ;
-	asprintf(&cmd, "echo %ld | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_setspeed",(set_speed/1000)) ;
-	system(cmd) ;
-
-	// free(cmd) ;
-	cmd = NULL ;
-}
-
-void set_governor(char * gov)
-{
-	char *cmd ;
-	asprintf(&cmd, "echo %s | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor",gov) ;
-	system(cmd) ;
-}
 
 void save_phase_time(int phase, int step, int loop, int iteration)
 {
