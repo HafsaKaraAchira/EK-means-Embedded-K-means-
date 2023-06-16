@@ -223,7 +223,6 @@ double calc_cycles_per_elem(size_t N,size_t M){
 	real_time.C_get_matrix_on_elem = (real_time.getmat_time - real_time.T_1_read * M ) * set_speed / M ;
 	real_time.C_init_elem = real_time.init_time * set_speed / M  ;
 	real_time.C_1_it_elem = real_time.km_1_iteration_time * set_speed / M  ;
-	printf("T_1t avg for %d sample is %lf \n",nb_it_sample,real_time.km_1_iteration_time) ;
 }
 
 long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * estimated_curr_chunk_delay,double * rem_time){
@@ -231,12 +230,11 @@ long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * est
 	long freq = available_frequencies[nb_available_frequencies-1] ;
 
 	if(chunk_ind == 1){
-		if(skip_chunk == 0){
-			// real_time.km_1_iteration_time = calc_history_past_time(km_it_start) / ( kmlio_chunks_stats[0].km_nb_iterations - nb_it_sample ) ;
+		if(corrected == 0){
 			real_time.C_1_it_elem =  ( ( real_time.C_1_it_elem * nb_it_sample * M )  + ( calc_history_past_time(km_it_start) * set_speed ) ) / (kmlio_chunks_stats[0].km_nb_iterations * M) ;
 			real_time.km_1_iteration_time = real_time.C_1_it_elem * M / freq ;
-			printf("corrected avg it delay = %f from %d of chunk 0\n",real_time.km_1_iteration_time,kmlio_chunks_stats[0].km_nb_iterations) ;
 			real_time.C_var_copy = real_time.var_copy_time / ( set_speed * M ) ;
+			corrected = 1 ;
 		}
 	}
 
@@ -295,8 +293,6 @@ long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * est
 
 	T_read =  ( exec_chunk_nb - skip_chunk + final_chunk_exist * ( (N/M) - skip_chunk ) ) * real_time.T_1_read * M ;
 
-	// printf("T_read =  %f\n",T_read) ;
-
 	double req_cycles = c_getmat + c_init + c_var_cpy + c_km * exec_nb_iterations ;
 
 	(*rem_time) = calc_remaining_Time() ;
@@ -317,23 +313,11 @@ long get_optimal_freq(size_t N, size_t M,int skip_chunk, int* found,double * est
 					max = optimal - 1 ;
 
 				optimal = (min + max) / 2 ;
-				
-				// else if (available_frequencies[optimal] >= req_freq)
-				// 	break;
 		}
 		freq = available_frequencies[min] ;
 	}
 
 	(*estimated_curr_chunk_delay) = (*estimated_curr_chunk_delay) / freq  + curr_chunk_read_time ;
-
-	// printf("%ld\n",available_frequencies[min]);
-	// printf("chunk_id=%d, test skip=%d: freq=%ld, req_freq=%f, opt_freq=%ld, req_time=%fs for: (%d)p+(%d)f chunks, rem_time=%fs\n",chunk_ind,skip_chunk,freq,req_freq,available_frequencies[min],req_cycles/freq+T_read,exec_chunk_nb - skip_chunk,final_chunk_exist,rem_time) ;
-	
-	// printf("chunk_id=%d, test skip=%d : freq %ld , required time = (%f)1st chunk + (%d)*tcp(%f)+ tcf(%f) = %f remaining time = %f\n",chunk_ind,skip_chunk,freq,C_1st_chk_km,( exec_chunk_nb - skip_chunk ),tcp,tcf,req_time,rem_time) ;	
-	// if(BASE_FREQ > req_freq){
-	// 	(*found) = 1 ;
-	// 	return freq ;
-	// }
 
 	return freq ;
 }
@@ -344,8 +328,6 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 	double estimated_curr_chunk_delay ;
 	skip_chunk_solution skip_chk_sols[(N/M) - chunk_ind] ;
 	double rem_time ;
-
-	printf("\nstart updating the skip chunk\n") ;
 
 	while(skp < (N/M) - chunk_ind){
 		f = get_optimal_freq(N,M,skp,&found,&estimated_curr_chunk_delay,&rem_time) ;
@@ -364,82 +346,12 @@ void decide_skip_chunk(size_t N, size_t M,long * freq){
 	}
 
 	skp_chk = skp ;
-	(*freq) = 0 ;
+	(*freq) = available_frequencies[nb_available_frequencies-1] ;
 	kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_curr_chunk_delay ;
 	kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
 
-	// {	
-			// skip_chk_sols[sol_ind++] = (skip_chunk_solution){.skip_chunk = skp , .freq = f , .estimated_curr_chunk_delay = estimated_curr_chunk_delay} ;
-			
-			// skp_chk = skp ;
-			// // printf("found optimal frequency = %ld\n",(*freq)) ;
-			// return ;
-		// }
-		// if(sol_ind > 0 && beta <= (skp / (N/M)) )
-
-	// if( sol_ind > 0 ){
-	// 	skp_chk = skip_chk_sols[(int)(beta*sol_ind/100)].skip_chunk ;
-	// 	(*freq) = skip_chk_sols[(int)(beta*sol_ind/100)].freq ;
-	// 	kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = skip_chk_sols[(int)(beta*sol_ind/100)].estimated_curr_chunk_delay ;
-	// }else{
-	// 	skp_chk = skp ;
-	// 	(*freq) = 0 ;
-	// 	kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_curr_chunk_delay ;
-	// }
-
-	printf("for beta = %f optimal solution found = %d {skip_chunk = %d, opt_freq = %ld, estimated_chunk_delay = %f }\n",beta,( sol_ind > 0 ),skp_chk,(*freq),kmlio_chunks_stats[chunk_ind].chunk_estimated_delay) ;
 }
 
-
-void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double * centroid){
-	char*  dirname ;
-	asprintf(&dirname,"SKIP_CHUNKS/reports/%ldN_%ldM_%ldD_%ldK_%dL_%.2fbeta",N,taille,dim,k,(int)D_max,beta) ;
-	int check = mkdir(dirname,0777);
-	sleep(5);
-
-	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
-
-	// log kmlio dataset properties : N, DIM , K , M , DMAX , TOTAL kmlio time
-	fprintf(fl,"%ld,%ld,%ld,%ld,%.3f,%.3f,%d,%lf,",N,taille,dim,k,D_max,beta,skp_chk,calc_delai_time(kmlio_start,kmlio_end));
-
-	// LOG PROBLEM CONSTANT :
-
-	fprintf(fl,"%lf,%lf,%lf,%lf,%lf,{",real_time.T_1_read,real_time.getmat_time,real_time.init_time,real_time.km_1_iteration_time,real_time.var_copy_time);
-
-	// log each skip chunk checkpoint decision : CURRENT CHUNK , C_cp, C_cf, REMAINING TIME, REQUIERED TIME , OPTIMAL FREQ , SKIP_CHUNK , LOG EACH CHUNK REAL TIME
-	char*  log_file_name ;
-	asprintf(&log_file_name,"%s/log_chunks_iterations.csv",dirname) ;
-	FILE * fp = fopen(log_file_name,"wt") ;
-
-	double T_all_iteration ;
-	for(int m = 0 ; m<(N/taille)+1;m++){
-		T_all_iteration = 0 ;
-		for(int it=0;it<kmlio_chunks_stats[m].km_nb_iterations;it++){
-			fprintf(fp,"%d,%d,%lf\n",m,it,kmeans_iterations_durations[m*MAX_ITERATIONS+it]);
-			T_all_iteration += kmeans_iterations_durations[m*MAX_ITERATIONS+it] ;
-		}
-		double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_estimated_delay - kmlio_chunks_stats[m].chunk_real_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
-		// fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;\"skp\":%d;T_all_it\":%f;\"remaining_time\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_rem_checkpoint,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error,(m==(N/taille)?"":",")) ;
-		fprintf(fl,"\"chunk_%d\":(%d;%ld;%d;%f;%f;%f;%f;%.4f)%s",
-																m,
-																kmlio_chunks_stats[m].km_nb_iterations,
-																kmlio_chunks_stats[m].freq/1000000,
-																kmlio_chunks_stats[m].skp_stat,
-																T_all_iteration,
-																kmlio_chunks_stats[m].chunk_rem_checkpoint,
-																kmlio_chunks_stats[m].chunk_estimated_delay,
-																kmlio_chunks_stats[m].chunk_real_delay,
-																chunk_delay_error,
-																(m==(N/taille)?"":",")
-															) ;
-	}
-	fprintf(fl,"}");
-
-	// LOG_CENTERS
-	char*  result_file_name ;
-	asprintf(&result_file_name,"%s/result_centers.csv",dirname) ;
-	r8mat_write(result_file_name,dim,k,centroid) ;
-}
 
 // //////////////////////////////////////////////////
 // //////////////////////////////////////////////////
@@ -448,340 +360,28 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 
 void fail(char *str)
 {
-	printf("%s", str);
+	// printf("%s", str);
 	exit(-1);
 }
 
-/**
-* Invokes the command source("foo.R").
-*/
-// void source(const char *name)
-// {
-//     SEXP e;
- 
-//     PROTECT(e = lang2(install("source"), mkString(name)));
-//     R_tryEval(e, R_GlobalEnv, NULL);
-//     UNPROTECT(1);
-// }
 
-// <pre>cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed</pre>
-
-// os.system("echo "+governor+" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
-// # os.system("cpupower -c all frequency-set -f "+str(freq))
-// # os.system("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed")
-
-void save_phase_time(int phase, int step, int loop, int iteration)
+void set_frequency(long freq)
 {
-	char *cmd;
-	// printf("iterations=%d",iteration);
-	asprintf(&cmd, "taskset -c $(($(nproc) - 1)) ./scripts/prog_script_phase %d %d %d %d -1 -1", phase, step, loop, iteration);
-	system(cmd);
-	free(cmd);
-	cmd = NULL;
+	set_speed = freq ;
+	char *cmd ;
+	asprintf(&cmd, "cpufreq-set -c 4 -f %ld",(set_speed/1000)) ;
+	printf("%s\n",cmd);
+	system(cmd) ;
+
+	// free(cmd) ;
+	cmd = NULL ;
 }
 
-void save_kmeans_iterations(int phase, int step, int loop, int iteration, int change_count, double tot_D)
+void set_governor(char * gov)
 {
-	char *cmd;
-	// printf("iterations=%d",iteration);
-	asprintf(&cmd, "taskset -c $(($(nproc) - 1)) ./scripts/prog_script_phase %d %d %d %d %d %f", phase, step, loop, iteration, change_count, tot_D);
-	system(cmd);
-	free(cmd);
-	cmd = NULL;
-}
-
-double *r8mat_data_read(char *input_filename, int m, int n)
-/******************************************************************************/
-/*
-  Purpose:
-
-	R8MAT_DATA_READ reads the data from an R8MAT file.
-
-  Discussion:
-
-	An R8MAT is an array of R8's.
-
-	The file is assumed to contain one record per line.
-
-	Records beginning with the '#' character are comments, and are ignored.
-	Blank lines are also ignored.
-
-	Each line that is not ignored is assumed to contain exactly (or at least)
-	M real numbers, representing the coordinates of a point.
-
-	There are assumed to be exactly (or at least) N such records.
-
-  Licensing:
-
-	This code is distributed under the GNU LGPL license.
-
-  Modified:
-
-	27 January 2005
-
-  Author:
-
-	John Burkardt
-
-  Parameters:
-
-	Input, char *INPUT_FILENAME, the name of the input file.
-
-	Input, int M, the number of spatial dimensions.
-
-	Input, int N, the number of points.  The program
-	will stop reading data once N values have been read.
-
-	Output, double R8MAT_DATA_READ[M*N], the data.
-*/
-{
-#define MY_LINE_MAX 255
-
-	int error;
-	char *got_string;
-	FILE *input;
-	int i;
-	int j;
-	char line[255];
-	double *table;
-	double *x;
-
-	input = fopen(input_filename, "r");
-
-	if (!input)
-	{
-		fprintf(stderr, "\n");
-		fprintf(stderr, "R8MAT_DATA_READ - Fatal error!\n");
-		fprintf(stderr, "  Could not open the input file: \"%s\"\n", input_filename);
-		exit(1);
-	}
-
-	table = (double *)malloc(m * n * sizeof(double));
-
-	x = (double *)malloc(m * sizeof(double));
-
-	j = 0;
-
-	while (j < n)
-	{
-		got_string = fgets(line, MY_LINE_MAX, input);
-
-		if (!got_string)
-		{
-			break;
-		}
-
-		// if ( line[0] == '#' || s_len_trim ( line ) == 0 ){continue;}
-
-		char delim[3] = "\t";
-
-		char *token = strtok(line, delim);
-		i = 0;
-		while (token != NULL)
-		{
-			x[i] = atof(token);
-			i++;
-			token = strtok(NULL, delim);
-		}
-
-		// error = s_to_r8vec ( line, m, x );
-
-		// if ( error == 1 ){continue;}
-
-		for (i = 0; i < m; i++)
-		{
-			table[i + j * m] = x[i];
-		}
-		j = j + 1;
-	}
-
-	fclose(input);
-
-	free(x);
-
-	return table;
-
-#undef MY_LINE_MAX
-}
-/******************************************************************************/
-
-void r8mat_write(char *output_filename, int m, int n, double table[])
-
-/******************************************************************************/
-/*
-  Purpose:
-
-	R8MAT_WRITE writes an R8MAT file.
-
-  Discussion:
-
-	An R8MAT is an array of R8's.
-
-  Licensing:
-
-	This code is distributed under the GNU LGPL license.
-
-  Modified:
-
-	01 June 2009
-
-  Author:
-
-	John Burkardt
-
-  Parameters:
-
-	Input, char *OUTPUT_FILENAME, the output filename.
-
-	Input, int M, the spatial dimension.
-
-	Input, int N, the number of points.
-
-	Input, double TABLE[M*N], the data.
-*/
-{
-	int i;
-	int j;
-	FILE *output;
-	/*
-	  Open the file.
-	*/
-	output = fopen(output_filename, "wt");
-
-	if (!output)
-	{
-		fprintf(stderr, "\n");
-		fprintf(stderr, "R8MAT_WRITE - Fatal error!\n");
-		fprintf(stderr, "  Could not open the file '%s'.\n", output_filename);
-		exit(1);
-	}
-	/*
-	  Write the data.
-	*/
-	for (j = 0; j < n; j++)
-	{
-		for (i = 0; i < m; i++)
-		{
-			fprintf(output, "%2.16f\t", table[i + j * m]); //%24.16g
-		}
-		fprintf(output, "\n");
-	}
-	/*
-	  Close the file.
-	*/
-	fclose(output);
-
-	return;
-}
-/******************************************************************************/
-
-void i4mat_write(char *output_filename, int m, int n, int table[])
-
-/******************************************************************************/
-/*
-  Purpose:
-
-	I4MAT_WRITE writes an I4MAT file.
-
-  Discussion:
-
-	An I4MAT is an array of I4's.
-
-  Licensing:
-
-	This code is distributed under the GNU LGPL license.
-
-  Modified:
-
-	01 June 2009
-
-  Author:
-
-	John Burkardt
-
-  Parameters:
-
-	Input, char *OUTPUT_FILENAME, the output filename.
-
-	Input, int M, the spatial dimension.
-
-	Input, int N, the number of points.
-
-	Input, int TABLE[M*N], the data.
-*/
-{
-	int i;
-	int j;
-	FILE *output;
-	/*
-	  Open the file.
-	*/
-	output = fopen(output_filename, "wt");
-
-	if (!output)
-	{
-		fprintf(stderr, "\n");
-		fprintf(stderr, "I4MAT_WRITE - Fatal error!\n");
-		fprintf(stderr, "  Could not open the output file '%s'\n", output_filename);
-		exit(1);
-	}
-	/*
-	  Write the data.
-	*/
-	for (j = 0; j < n; j++)
-	{
-		for (i = 0; i < m; i++)
-		{
-			fprintf(output, "  %d", table[i + j * m]);
-		}
-		fprintf(output, "\n");
-	}
-	/*
-	  Close the file.
-	*/
-	fclose(output);
-
-	return;
-}
-/******************************************************************************/
-
-void rbinmat_write(char *output_filename, int m, int n, double table[])
-
-/******************************************************************************/
-/*
- */
-{
-	int i;
-	int j;
-	FILE *output;
-	/*
-	  Open the file.
-	*/
-	output = fopen(output_filename, "at");
-
-	if (!output)
-	{
-		fprintf(stderr, "\n");
-		fprintf(stderr, "R8MAT_WRITE - Fatal error!\n");
-		fprintf(stderr, "  Could not open the file '%s'.\n", output_filename);
-		exit(1);
-	}
-	/*
-	  Write the data.
-	*/
-	for (j = 0; j < n; j++)
-	{
-		for (i = 0; i < m; i++)
-		{
-			fwrite(&table[i + j * m], sizeof(double), 1, output); //%24.16g
-		}
-	}
-	/*
-	  Close the file.
-	*/
-	fclose(output);
-
-	return;
+	char *cmd ;
+	asprintf(&cmd, "cpufreq-set -c 4 -g %s",gov) ;
+	system(cmd) ;
 }
 
 double calc_distance(int dim, double *p1, double *p2)
@@ -884,7 +484,7 @@ void calc_cluster_centroids(int dim, int n, int k, double *X, int *cluster_assig
 	for (ii = 0; ii < k; ii++)
 	{
 		/*   if (cluster_member_count[ii] == 0)
-			printf("WARNING: Empty cluster %d! \n", ii);
+			// printf("WARNING: Empty cluster %d! \n", ii);
 			 */
 		// for each dimension
 		for (jj = 0; jj < dim; jj++)
@@ -937,30 +537,13 @@ void perform_move(int dim, int n, int k, double *X, int *cluster_assignment, dou
 	cluster_member_count[cluster_new]++;
 
 	if (cluster_member_count[cluster_old] <= 1)
-		printf("WARNING: Can't handle single-member clusters! \n");
+		// printf("WARNING: Can't handle single-member clusters! \n");
 
 	// update centroid array
 	for (ii = 0; ii < dim; ii++)
 	{
 		cluster_centroid[cluster_old * dim + ii] -= (X[move_point * dim + ii] - cluster_centroid[cluster_old * dim + ii]) / cluster_member_count[cluster_old];
 		cluster_centroid[cluster_new * dim + ii] += (X[move_point * dim + ii] - cluster_centroid[cluster_new * dim + ii]) / cluster_member_count[cluster_new];
-	}
-}
-
-void cluster_diag(int dim, int n, int k, double *X, int *cluster_assignment_index, double *cluster_centroid)
-{
-	int cluster_member_count[MAX_CLUSTERS];
-
-	// get_cluster_member_count(n, k, cluster_assignment_index, cluster_member_count);
-	int ii, j;
-	// printf("  Final clusters %d\n", k);
-	for (ii = 0; ii < k; ii++)
-	{
-		// printf("    cluster %d:     members: %8d, centroid ", ii, cluster_member_count[ii]);
-		for (j = 0; j < dim; j++)
-			printf("%lf  ", cluster_centroid[ii * dim + j]);
-
-		printf("\n");
 	}
 }
 
@@ -1035,7 +618,7 @@ void kmeans(
 			copy_assignment_array(n, cluster_assignment_prev, cluster_assignment_cur);
 			// recalc centroids
 			calc_cluster_centroids(dim, n, k, X, cluster_assignment_cur, cluster_centroid);
-			printf("  negative progress made on this step - iteration completed (%.2f) \n", totD - prev_totD);
+			// printf("  negative progress made on this step - iteration completed (%.2f) \n", totD - prev_totD);
 			// done with this phase
 			break;
 		}
@@ -1080,7 +663,7 @@ void kmeans(
 					decide_skip_chunk(N,n,&freq) ;
 					//set the optimal frequency for the rest of the chunk execution
 					set_frequency(freq) ;
-					// printf("in km , chunk %d : frequency set at %ld , skip chunk is %d \n",chunk_ind,freq,skp_chk) ;
+					// // printf("in km , chunk %d : frequency set at %ld , skip chunk is %d \n",chunk_ind,freq,skp_chk) ;
 					gettimeofday(&km_it_start, NULL);
 				}
 			}
@@ -1115,21 +698,21 @@ int *mark(char *source, size_t dim, size_t N, int chunk_size)
 	char *token;
 	int j = 0, mark_index = 1;
 	marks[0] = ftell(src);
-	// printf ("marks[0] = %d\n", marks[0]);
+	// // printf ("marks[0] = %d\n", marks[0]);
 	while (!feof(src))
 	{
 		fgets(line, 100000, src);
-		// printf("j = %d , ",j) ;
+		// // printf("j = %d , ",j) ;
 		j = (j + 1) % chunk_size;
 		// if(strlen(line)>max_line_size) max_line_size = strlen(line) ;
 		if (j == 0)
 		{
 			marks[mark_index] = ftell(src);
-			// printf ("marks[%d] = %ld , %d\n", mark_index, ftell(src),j);
+			// // printf ("marks[%d] = %ld , %d\n", mark_index, ftell(src),j);
 			mark_index++;
 		}
 	}
-	// printf("max line size = %ld\n",max_line_size) ;
+	// // printf("max line size = %ld\n",max_line_size) ;
 
 	fclose(src);
 	return marks;
@@ -1172,14 +755,14 @@ double *getmatrix(char *source, size_t dim, size_t N, int sub, int offset, int *
 double *getmatrix_bin(char *source, size_t dim, size_t N, int sub, int offset)
 {
 	FILE *src = fopen(source, "rb");
-	printf("binary file opened\n");
+	// printf("binary file opened\n");
 	double *X = NULL;
 	size_t i = 0, j = 0;
 	int stop = 0;
 
 	X = (double *)malloc(sizeof(double) * sub * dim);
 	fseek(src, sizeof(double) * offset, SEEK_CUR);
-	printf("binary file fseek done\n");
+	// printf("binary file fseek done\n");
 
 	j = 0;
 	while (!feof(src) && !stop)
@@ -1250,7 +833,7 @@ double *getmatrix_mmap(char *source, size_t dim, int k, size_t N, int sub, int o
 		mapped = mmap(0, chunk_text_size, PROT_READ, MAP_PRIVATE, src, 0);
 
 		// check (mapped == MAP_FAILED, "mmap failed\n");
-		printf("stop after buf malloc @ = %p\n", mapped);
+		// printf("stop after buf malloc @ = %p\n", mapped);
 		sleep(10);
 
 		to_read_lines -= L;
@@ -1273,7 +856,7 @@ double *getmatrix_mmap(char *source, size_t dim, int k, size_t N, int sub, int o
 				stop = 1;
 				munmap(mapped, chunk_text_size);
 				s = malloc_trim(0);
-				printf("stop after buf free @ = %p\n", mapped);
+				// printf("stop after buf free @ = %p\n", mapped);
 				sleep(10);
 			}
 		}
@@ -1282,10 +865,10 @@ double *getmatrix_mmap(char *source, size_t dim, int k, size_t N, int sub, int o
 	close(src);
 
 	s = malloc_trim(0);
-	printf("stop after buffer free , trimming status = %d\n", s);
+	// printf("stop after buffer free , trimming status = %d\n", s);
 	sleep(10);
 
-	printf("GET MATRIX %d COMPLETE\n", offset / sub);
+	// printf("GET MATRIX %d COMPLETE\n", offset / sub);
 
 	return X;
 }
@@ -1321,7 +904,7 @@ double *getmatrix_buf(char *source, size_t dim, int k, size_t N, int sub, int of
 
 	// allocate matrix
 	X = (double *)malloc(sizeof(double) * sub * dim);
-	// printf("stop after X malloc\n") ;
+	// // printf("stop after X malloc\n") ;
 
 	// sleep(20) ;
 	// begin reading the file
@@ -1331,7 +914,7 @@ double *getmatrix_buf(char *source, size_t dim, int k, size_t N, int sub, int of
 	char *token;
 	// store the buffered lines read form files at once
 	char **buf = (char **)calloc(L_opt, sizeof(char *));
-	// printf("stop after buf malloc\n") ;
+	// // printf("stop after buf malloc\n") ;
 
 	// load the chunk
 	j = 0;
@@ -1359,10 +942,10 @@ double *getmatrix_buf(char *source, size_t dim, int k, size_t N, int sub, int of
 			L++;
 		}
 
-		// printf("stop after read\n") ;
+		// // printf("stop after read\n") ;
 		// sleep(15) ;
 
-		// printf("Lmax = %d \tLopt = %d \tL = %d \tread lines = %ld \tmax line size = %ld \tstrings real size %f MB + buffer pointers size %f MB\n",L_max,L_opt, L,(j/(dim)),max_line_size+1+sizeof(char *),buf_len/pow(1024,2),(L_opt*sizeof(char*))/pow(1024,2)) ;
+		// // printf("Lmax = %d \tLopt = %d \tL = %d \tread lines = %ld \tmax line size = %ld \tstrings real size %f MB + buffer pointers size %f MB\n",L_max,L_opt, L,(j/(dim)),max_line_size+1+sizeof(char *),buf_len/pow(1024,2),(L_opt*sizeof(char*))/pow(1024,2)) ;
 
 		L = L_opt;
 		to_read_lines -= L;
@@ -1386,7 +969,7 @@ double *getmatrix_buf(char *source, size_t dim, int k, size_t N, int sub, int of
 		}
 
 		// s = malloc_trim(0);
-		// printf("stop after fill\n") ;
+		// // printf("stop after fill\n") ;
 		// sleep(15) ;
 
 		// if we have read all the chunk lines
@@ -1409,7 +992,7 @@ double *getmatrix_buf(char *source, size_t dim, int k, size_t N, int sub, int of
 
 	s = malloc_trim(0);
 
-	// printf("stop after free\n") ;
+	// // printf("stop after free\n") ;
 	// sleep(10) ;
 
 	return X;
@@ -1488,9 +1071,9 @@ double *kmeans_init_plusplus(double *X, size_t N, size_t dim, size_t k)
 		for (j = 0; j < dim; j++)
 		{
 			centers[i * dim + j] = X[centers_int[i] * dim + j];
-			//	printf ("%lf\t", X[centers_int[i]*dim+j]);
+			//	// printf ("%lf\t", X[centers_int[i]*dim+j]);
 		}
-		// printf ("\n");
+		// // printf ("\n");
 	}
 	free(centers_int);
 	centers_int = NULL;
@@ -1529,13 +1112,13 @@ void dispersion(double *X, size_t dim, size_t N)
 		}
 	}
 	/*for (i=0; i<dim; i++){
-	printf ("%lf\t", max[i]);
+	// printf ("%lf\t", max[i]);
 	}
-	printf("\n");
+	// printf("\n");
 	for (i=0; i<dim; i++){
-	printf ("%lf\t", min[i]);
+	// printf ("%lf\t", min[i]);
 	}*/
-	printf("distance min-max %lf\n", calc_distance(dim, min, max));
+	// printf("distance min-max %lf\n", calc_distance(dim, min, max));
 }
 
 // partial kmeans function
@@ -1560,7 +1143,7 @@ double *partial_mean(double *X, size_t dim, size_t chunk_len, size_t chunk_index
 		sum[i] /= chunk_len;
 		// ("\t %lf", sum[i]);
 	}
-	// printf("\n");
+	// // printf("\n");
 
 	return sum;
 }
@@ -1654,7 +1237,7 @@ int maximize(double *partial_means, int *jpris, int pris, int dim, int k, int ch
 		}
 	}
 
-	printf("stop %d\n", res);
+	// printf("stop %d\n", res);
 	return res;
 }
 
@@ -1746,7 +1329,7 @@ double * form_chunk(groupe *grp, /*double *X*/ char *source, int *marks, int *cl
 		cur[i] = NULL;
 	}
 	// form groups index
-	// printf("BEGIN BUILD INDEX\n") ;
+	// // printf("BEGIN BUILD INDEX\n") ;
 	form_index(cluster_assignment, nb_groupes, grp, N - (taille*skp_chk) ) ;
 
 	// form chunk
@@ -1818,18 +1401,18 @@ double * form_chunk(groupe *grp, /*double *X*/ char *source, int *marks, int *cl
 		{
 			// Y = getmatrix(source, dim, taille,taille,i*taille, marks);
 			Y = getmatrix_buf(source, dim, k, taille, taille, i * taille, marks);
-			// printf ("chunk %d\n", i);
+			// // printf ("chunk %d\n", i);
 			for (j = 0; j < dim; j++)
 			{
 				chunk[size * dim + j] = Y[index[i].element * dim + j];
-				// printf("%lf\n", Y[index[i].element*dim+j]);
+				// // printf("%lf\n", Y[index[i].element*dim+j]);
 			}
 			size++;
 			// goto next point in index
 			cur[i] = index[i].next;
 			while (cur[i] != NULL)
 			{
-				// printf("ELEMENT %ld\n", cur[i]->element);
+				// // printf("ELEMENT %ld\n", cur[i]->element);
 				for (j = 0; j < dim; j++)
 				{
 					chunk[size * dim + j] = Y[cur[i]->element * dim + j];
@@ -1841,7 +1424,7 @@ double * form_chunk(groupe *grp, /*double *X*/ char *source, int *marks, int *cl
 			free(Y);
 		}
 	}
-	// printf ("size %d\n", size);
+	// // printf ("size %d\n", size);
 	return chunk;
 }
 
@@ -1928,28 +1511,28 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 
 			//get optimal frequency and skip chunk for the first chunk execution
 				
-			// printf("chunk id %d completed\n",m) ;
+			// // printf("chunk id %d completed\n",m) ;
 			chunk_ind ++ ;
 			if( chunk_ind < (N/taille) ){
-				printf(" chunks to tolerate loss =  %d , chunks to skip = %d , switch strategy test = %d\n",(int)floor(beta * (N/taille)) , skp_chk, (int)floor(beta * (N/taille)) >= skp_chk) ;
+				// // printf(" chunks to tolerate loss =  %d , chunks to skip = %d , switch strategy test = %d\n",(int)floor(beta * (N/taille)) , skp_chk, (int)floor(beta * (N/taille)) >= skp_chk) ;
 
-				if( (int)floor(beta * (N/taille)) < skp_chk ){  // if the number of  chunks to skip is greater than the data loss percentage , we 
-					decide_skip_chunk(N,taille,&freq) ;
+				// if( (int)floor(beta * (N/taille)) < skp_chk ){  // if the number of  chunks to skip is greater than the data loss percentage , we 
+				// 	decide_skip_chunk(N,taille,&freq) ;
 					
-				}else{
-					// set_frequency(available_frequencies[nb_available_frequencies-1]) ;
-					printf("same skip chunk=%d get optimal freq\n",skp_chk) ;
-					int found  = 0 ;
-					double estimated_chunk_delay  = 0 , rem_time = 0;
+				// }else{
+				// set_frequency(available_frequencies[nb_available_frequencies-1]) ;
+				printf("same skip chunk=%d get optimal freq for chunk %d\n",skp_chk,chunk_ind) ;
+				int found  = 0 ;
+				double estimated_chunk_delay  = 0 , rem_time = 0;
 
-					freq = get_optimal_freq(N,taille,skp_chk,&found,&estimated_chunk_delay,&rem_time) ;
+				freq = get_optimal_freq(N,taille,skp_chk,&found,&estimated_chunk_delay,&rem_time) ;
 
-					kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_chunk_delay ;
-					kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
-					kmlio_chunks_stats[chunk_ind].freq = freq ;
-					kmlio_chunks_stats[chunk_ind].skp_stat = skp_chk ;
+				kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_chunk_delay ;
+				kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
+				kmlio_chunks_stats[chunk_ind].freq = freq ;
+				kmlio_chunks_stats[chunk_ind].skp_stat = skp_chk ;
 
-				}
+				// }
 
 				// set_frequency(freq) ;
 
@@ -1958,7 +1541,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 				//if the first chunk is  the sole one to be treated , end kmlio with its centroids results
 				if(m==0){
 					if( ( ( N / taille ) - m - skp_chk ) <= 1 ){
-						// printf("stopped after the first chunk excecution 1/%d\n",N/taille) ;
+						// // printf("stopped after the first chunk excecution 1/%d\n",N/taille) ;
 						free(Y);
 						Y = NULL;
 						gettimeofday(&chunk_end, NULL);
@@ -2007,11 +1590,11 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 			kmlio_chunks_stats[m].chunk_real_delay = calc_delai_time(chunk_start,chunk_end) ;
 
 			if( ( ( N / taille ) - m - skp_chk ) <= 1 ){
-				// printf("skipped chunk reached after %d of %d\n",m+1,N/taille) ;
+				// // printf("skipped chunk reached after %d of %d\n",m+1,N/taille) ;
 				break ;
 			}else{
 				set_frequency(freq) ;
-				// printf("chunk %d estimation : frequency set at %ld , skip chunk is %d \n",chunk_ind,freq,skp_chk) ;
+				// // printf("chunk %d estimation : frequency set at %ld , skip chunk is %d \n",chunk_ind,freq,skp_chk) ;
 			}
 
 
@@ -2023,7 +1606,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 
 		// decide_skip_chunk(N,taille,&freq) ;
 		
-		// printf("final chunk n %d : frequency set at %ld , skip chunk is %d \n",chunk_ind,freq,skp_chk) ;
+		// // printf("final chunk n %d : frequency set at %ld , skip chunk is %d \n",chunk_ind,freq,skp_chk) ;
 
 
 		/****** PHASE 2 : PARTIELS CLUSTERS GROUPING ******/
@@ -2044,7 +1627,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 					{
 						groupes[nb_groupes].means = (int *)realloc(groupes[nb_groupes].means, (groupes[nb_groupes].nb + 1) * sizeof(int));
 						groupes[nb_groupes].means[groupes[nb_groupes].nb] = n;
-						// printf ("next\n");
+						// // printf ("next\n");
 						groupes[nb_groupes].nb++;
 					}
 				}
@@ -2070,14 +1653,14 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 
 		/****** PHASE 3 : FINAL CHUNK BUILDING ******/
 
-		// printf("begin form chunk\n") ;
+		// // printf("begin form chunk\n") ;
 
-		gettimeofday(&chunk_start, NULL);
+		// gettimeofday(&chunk_start, NULL);
 		
 		double *chunk;
 		chunk = form_chunk(groupes, source, marks, cluster_assignment_final, nb_groupes, N, dim, k, taille);
 
-		// printf("end form chunk\n") ;
+		// // printf("end form chunk\n") ;
 
 		free(cluster_assignment_final);
 		cluster_assignment_final = NULL;
@@ -2091,7 +1674,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 
 		/****** PHASE 4 : FINAL CHUNK KMEANS ******/
 
-		// printf("begin final chunk\n") ;
+		// // printf("begin final chunk\n") ;
 
 		(*cluster_centroid) = kmeans_init_plusplus(chunk, taille, dim, k);
 
@@ -2101,9 +1684,9 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 		free(chunk);
 		chunk = NULL;
 
-		gettimeofday(&chunk_end, NULL);
-		kmlio_chunks_stats[chunk_ind].chunk_real_delay = calc_delai_time(chunk_start,chunk_end) ;
-		kmlio_chunks_stats[chunk_ind].km_nb_iterations = kmeans_iterations ;
+		// gettimeofday(&chunk_end, NULL);
+		// kmlio_chunks_stats[chunk_ind].chunk_real_delay = calc_delai_time(chunk_start,chunk_end) ;
+		// kmlio_chunks_stats[chunk_ind].km_nb_iterations = kmeans_iterations ;
 	}
 	else
 	{
@@ -2126,8 +1709,6 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k,double *
 	free(marks);
 	marks = NULL;
 
-	// free(cluster_centroid);
-	// cluster_centroid = NULL;
 }
 
 
@@ -2136,8 +1717,8 @@ int main(int argc, char **argv)
 	cpu_set_t set;
 	// clear cpu mask
 	CPU_ZERO(&set);
-	// set cpu 0
-	CPU_SET(0, &set);
+	// set cpu 4
+	CPU_SET(4, &set);
 	// 0 is the calling process
 	sched_setaffinity(0, sizeof(cpu_set_t), &set);
 	// set priority
@@ -2151,13 +1732,8 @@ int main(int argc, char **argv)
 	double *X;
 
 	char cmd[200];
-	sprintf (cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
-	printf ("%s\n", cmd);
+	sprintf (cmd, "echo %d > /sys/fs/cgroup/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
 	system(cmd);
-
-	// sprintf (cmd, "echo %d > /sys/fs/cgroup/blkio/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
-	// printf ("%s\n", cmd);
-	// system(cmd);
 
 	sleep(1);
 
@@ -2174,10 +1750,7 @@ int main(int argc, char **argv)
 	
 	srand(time(NULL));
 
-	//begin = clock();
 	double * centroid = NULL ;
-
-	// km_freq = calloc((N/taille)+1,sizeof(long)) ;
 
 	set_governor("userspace") ;
 	
@@ -2188,18 +1761,6 @@ int main(int argc, char **argv)
 	gettimeofday(&kmlio_end, NULL) ;
 
 	set_governor("conservative") ;
-
-	printf("KMLIO EXECUTION COMPLETE , remaining time = %f \n",calc_remaining_Time()) ;
-
-	printf("\n----------------------------------------------------------------------------\n") ;
-	printf("\n----------------------------------------------------------------------------\n") ;
-	printf("\n----------------------------------------------------------------------------\n") ;
-
-	
-
-	kmlio_diag(k,dim,N,taille,D_max,centroid) ;
-
-	printf("KMLIO EXECUTION REPORT READY\n") ;
 
 	return 0;
 }
