@@ -1135,7 +1135,7 @@ double *form_chunk(groupe *grp, /*double *X*/ char *source, int *marks, int *clu
 {
 	double *chunk = (double *)malloc(sizeof(double) * (dim * taille));
 	int nb_samples;
-	int j, index_groupe, l, size = 0, i, m, *int_chunk; // found,
+	int j, index_groupe, l, size = 0, i,*int_chunk; // found,
 	int tmp;
 	double *Y;
 	float c;
@@ -1250,7 +1250,7 @@ double *form_chunk(groupe *grp, /*double *X*/ char *source, int *marks, int *clu
 
 void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double **cluster_centroid)
 {
-	int i, j, n, m = 0, kmeans_iterations = 0, kmeans_change_count = 0;
+	int i, j, n, kmeans_iterations = 0, kmeans_change_count = 0;
 	double *Y = NULL;
 	int *cluster_assignment_final = NULL, *cluster_assignment_final_Y = NULL;
 	double *cluster_centroid_by_chunk = NULL, *chunk_centroid = NULL;
@@ -1288,19 +1288,19 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 		kmlio_chunks_stats = calloc((N / taille) + 1, sizeof(chunk_stats));
 
 		//////////////////////////////////////
-		m = 0;
-		while (m < (N / taille) - skip_chunk)
+		chunk_ind = 0;
+		while (chunk_ind < (N / taille) - skip_chunk)
 		{
 			gettimeofday(&chunk_start, NULL);
 			//////////////////////////////////////
 
 			// lecture du chunk
-			// kmlio_chunks_stats[m] = (chunk_stats*) calloc(1,sizeof(chunk_stats)) ;
+			// kmlio_chunks_stats[chunk_ind] = (chunk_stats*) calloc(1,sizeof(chunk_stats)) ;
 
-			i = m * taille;
+			i = chunk_ind * taille;
 			Y = getmatrix_buf(source, dim, k, taille, taille, i, marks);
 
-			if (m == 0) //SAVEPOINT:
+			if (chunk_ind == 0) //SAVEPOINT:
 			{
 				gettimeofday(&tv_1, NULL);
 				real_time.getmat_time = calc_delai_time(chunk_start, tv_1);
@@ -1308,10 +1308,10 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 			//////////////////////////////////////
 
-			// chunk m init kmeans++
+			// chunk chunk_ind init kmeans++
 			(*cluster_centroid) = kmeans_init_plusplus(Y, taille, dim, k);
 
-			if (m == 0)	 //SAVEPOINT:
+			if (chunk_ind == 0)	 //SAVEPOINT:
 			{
 				gettimeofday(&tv_2, NULL);
 				real_time.init_time = calc_delai_time(tv_1, tv_2);
@@ -1320,7 +1320,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 			//////////////////////////////////////
 
-			// apply kmeans on the chunk m
+			// apply kmeans on the chunk chunk_ind
 			cluster_assignment_final_Y = (int *)malloc(taille * sizeof(int));
 			kmeans(dim, Y, N, taille, k, (*cluster_centroid), cluster_assignment_final_Y, &kmeans_iterations, &kmeans_change_count);
 
@@ -1330,20 +1330,20 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 			gettimeofday(&tv_1, NULL);
 
-			// variance calculation on the chunk m
+			// variance calculation on the chunk chunk_ind
 			for (j = 0; j < k; j++)
 			{
-				var[m * k + j] = var_calculate(Y, dim, (*cluster_centroid), j, cluster_assignment_final_Y, taille) / taille;
+				var[chunk_ind * k + j] = var_calculate(Y, dim, (*cluster_centroid), j, cluster_assignment_final_Y, taille) / taille;
 			}
 			// copy the centroids to global array
 			for (j = 0; j < k * dim; j++)
 			{
-				cluster_centroid_by_chunk[m * k * dim + j] = (*cluster_centroid)[j];
+				cluster_centroid_by_chunk[chunk_ind * k * dim + j] = (*cluster_centroid)[j];
 			}
 			// copy points clustering to global array
 			for (n = 0; n < taille; n++)
 			{
-				cluster_assignment_final[m * taille + n] = cluster_assignment_final_Y[n] + m * k;
+				cluster_assignment_final[chunk_ind * taille + n] = cluster_assignment_final_Y[n] + chunk_ind * k;
 			}
 
 			free(Y);
@@ -1356,17 +1356,17 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 			cluster_assignment_final_Y = NULL;
 
 			gettimeofday(&chunk_end, NULL);
-			if (m == 0)	 //SAVEPOINT:
+			if (chunk_ind == 0)	 //SAVEPOINT:
 				real_time.var_copy_time = calc_delai_time(tv_1, chunk_end);
 
 
 			//SAVEPOINT: svae chunk real elapsed time
-			kmlio_chunks_stats[m].chunk_real_delay = calc_delai_time(chunk_start, chunk_end);
+			kmlio_chunks_stats[chunk_ind].chunk_real_delay = calc_delai_time(chunk_start, chunk_end);
 
 			////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////
 
-			if( m == 0 ){	//CHECKPOINT : DECIDE THE NUMBER OF CHUNKS TO DROP
+			if( chunk_ind == 0 ){	//CHECKPOINT : DECIDE THE NUMBER OF CHUNKS TO DROP
 				// calculate the observation times at each opration of kmlio
 				calc_cycles_per_elem(N, n);
 
@@ -1379,9 +1379,12 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 				// ////////////////////////////////////
 			}
 
-			if (((N / taille) - m - skip_chunk) <= 1) //CHECKPOINT : if processing the remaining partial chunks is complete
+			//check for the next chunk
+			chunk_ind++;
+
+			if (((N / taille) - chunk_ind - skip_chunk) <= 0) //CHECKPOINT : if processing the remaining partial chunks is complete
 			{
-				if(m==0){ // if we performed only the first chunk , kmlio return without composing the final chunk
+				if(chunk_ind==1){ // if we performed only the first chunk , kmlio return without composing the final chunk
 					// free all computations structures
 					free(Y);
 					Y = NULL;
@@ -1391,7 +1394,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 					marks = NULL;
 					
 					// KMLIO IS TERMINATED
-					return;
+					return ;
 				}
 				//else , we STOP PROECESSING PARTIAL CHUNKS and go the kmlio's next phase
 				break;
@@ -1404,21 +1407,16 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 				freq = get_optimal_freq(N, taille, &estimated_chunk_delay, &rem_time);
 
-				kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_chunk_delay;
-				kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time;
-				kmlio_chunks_stats[chunk_ind].freq = freq;
-				kmlio_chunks_stats[chunk_ind].skp_stat = skip_chunk;
+				kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_chunk_delay ;
+				kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time ;
+				kmlio_chunks_stats[chunk_ind].freq = freq ;
+				kmlio_chunks_stats[chunk_ind].skp_stat = skip_chunk ;
 
-				set_frequency(freq);
-				// printf("chunk %d estimation : frequency set at %ld , skip chunk is %d \n",chunk_ind,freq,skip_chunk) ;
+				set_frequency(freq) ;
 			}
 
-			chunk_ind++;
-
 			////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////
-
-			m++;
 
 		}// PARTIAL CHUNKS CLUSTERING END
 
@@ -1547,7 +1545,8 @@ int main(int argc, char **argv)
 	N = atoi(argv[3]);
 	taille = atoi(argv[4]);
 	dim = atoi(argv[5]);
-	D_max = atoi(argv[6]);						   // kmlio maximal delay time in seconds
+	D_max = atoi(argv[6]);	// kmlio maximal delay time in seconds
+
 	// nb_it_sample = (argc > 7 ? atoi(argv[7]) : 1); // number of samples that enter in calculating iteration avg time
 	// beta = (argc > 8 ? atof(argv[8]) : 0);		   // precison - energy tendency factor for skip chunk strategy
 
