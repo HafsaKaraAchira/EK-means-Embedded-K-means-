@@ -1548,8 +1548,8 @@ int main(int argc, char **argv)
 	taille = atoi(argv[4]);
 	dim = atoi(argv[5]);
 	D_max = atoi(argv[6]);						   // kmlio maximal delay time in seconds
-	nb_it_sample = (argc > 7 ? atoi(argv[7]) : 1); // number of samples that enter in calculating iteration avg time
-	beta = (argc > 8 ? atof(argv[8]) : 0);		   // precison - energy tendency factor for skip chunk strategy
+	// nb_it_sample = (argc > 7 ? atoi(argv[7]) : 1); // number of samples that enter in calculating iteration avg time
+	// beta = (argc > 8 ? atof(argv[8]) : 0);		   // precison - energy tendency factor for skip chunk strategy
 
 	skip_chunk = 0;
 
@@ -1566,6 +1566,18 @@ int main(int argc, char **argv)
 	gettimeofday(&kmlio_end, NULL);
 
 	set_governor("conservative");
+	
+	printf("KMLIO EXECUTION COMPLETE , remaining time = %f \n",calc_remaining_Time()) ;
+
+	printf("\n----------------------------------------------------------------------------\n") ;
+	printf("\n----------------------------------------------------------------------------\n") ;
+	printf("\n----------------------------------------------------------------------------\n") ;
+
+	
+
+	kmlio_diag(k,dim,N,taille,D_max,centroid) ;
+
+	printf("KMLIO EXECUTION REPORT READY\n") ;
 
 	return 0;
 }
