@@ -61,6 +61,8 @@ struct kmlio_time_estimation
 	double C_get_matrix_on_elem;
 	double C_var_copy;
 	double T_1_read;
+
+	int nb_group ;
 };
 typedef struct kmlio_time_estimation kmlio_time_estimation;
 
@@ -299,6 +301,59 @@ void decide_skip_chunk(size_t N, size_t M)
 	// kmlio_chunks_stats[chunk_ind].chunk_estimated_delay = estimated_curr_chunk_delay;
 	// kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time;
 }
+
+
+
+void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double * centroid){
+	char*  dirname ;
+	asprintf(&dirname,"SKIP_CHUNKS/reports/%dN_%dM_%dD_%dK_%dL_%.2fbeta",N,taille,dim,k,(int)D_max,beta) ;
+	int check = mkdir(dirname,0777);
+	sleep(5);
+
+	FILE * fl = fopen("SKIP_CHUNKS/reports/log_skip_chunk.csv","at") ;
+
+	// log kmlio dataset properties : N, DIM , K , M , DMAX , TOTAL kmlio time
+	fprintf(fl,"%d,%d,%d,%d,%.3f,%.3f,%d,%lf,",N,taille,dim,k,D_max,beta,skip_chunk,calc_delai_time(kmlio_start,kmlio_end));
+
+	// LOG PROBLEM CONSTANT :
+
+	fprintf(fl,"%d,%lf,%lf,%lf,%lf,%lf,{",real_time.nb_group,real_time.T_1_read,real_time.getmat_time,real_time.init_time,real_time.km_1_iteration_time,real_time.var_copy_time);
+
+	// log each skip chunk checkpoint decision : CURRENT CHUNK , C_cp, C_cf, REMAINING TIME, REQUIERED TIME , OPTIMAL FREQ , SKIP_CHUNK , LOG EACH CHUNK REAL TIME
+	char*  log_file_name ;
+	asprintf(&log_file_name,"%s/log_chunks_iterations.csv",dirname) ;
+	FILE * fp = fopen(log_file_name,"wt") ;
+
+	double T_all_iteration ;
+	for(int m = 0 ; m<(N/taille)+1;m++){
+		T_all_iteration = 0 ;
+		for(int it=0;it<kmlio_chunks_stats[m].km_nb_iterations;it++){
+			fprintf(fp,"%d,%d,%lf\n",m,it,kmeans_iterations_durations[m*MAX_ITERATIONS+it]);
+			T_all_iteration += kmeans_iterations_durations[m*MAX_ITERATIONS+it] ;
+		}
+		double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_estimated_delay - kmlio_chunks_stats[m].chunk_real_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
+		// fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;\"skp\":%d;T_all_it\":%f;\"remaining_time\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_rem_checkpoint,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error,(m==(N/taille)?"":",")) ;
+		fprintf(fl,"\"chunk_%d\":(%d;%ld;%d;%f;%f;%f;%f;%.4f)%s",
+																m,
+																kmlio_chunks_stats[m].km_nb_iterations,
+																kmlio_chunks_stats[m].freq/1000000,
+																kmlio_chunks_stats[m].skp_stat,
+																T_all_iteration,
+																kmlio_chunks_stats[m].chunk_rem_checkpoint,
+																kmlio_chunks_stats[m].chunk_estimated_delay,
+																kmlio_chunks_stats[m].chunk_real_delay,
+																chunk_delay_error,
+																(m==(N/taille)?"":",")
+															) ;
+	}
+	fprintf(fl,"}");
+
+	// LOG_CENTERS
+	char*  result_file_name ;
+	asprintf(&result_file_name,"%s/result_centers.csv",dirname) ;
+	r8mat_write(result_file_name,dim,k,centroid) ;
+}
+
 
 // //////////////////////////////////////////////////
 // //////////////////////////////////////////////////
@@ -1207,7 +1262,6 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 	// //////////////////////////////////////////
 	struct timeval tv_1, tv_2, chunk_start, chunk_end;
 	long freq;
-
 	// //////////////////////////////////////////
 	// *cluster_centroid = NULL ;
 
@@ -1232,9 +1286,6 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 		kmeans_iterations_durations = calloc(MAX_ITERATIONS * ((N / taille) + 1), sizeof(double));
 		kmlio_chunks_stats = calloc((N / taille) + 1, sizeof(chunk_stats));
-
-		// chunks_km_nb_iterations = calloc( (( N / taille )+1) , sizeof(int) ) ;
-		// chunks_elapsed_durations = calloc( (( N / taille )+1) , sizeof(double)) ;
 
 		//////////////////////////////////////
 		m = 0;
@@ -1328,16 +1379,21 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 				// ////////////////////////////////////
 			}
 
-			if (((N / taille) - m - skip_chunk) <= 1) // if processing the remaining partial chunks is complete
+			if (((N / taille) - m - skip_chunk) <= 1) //CHECKPOINT : if processing the remaining partial chunks is complete
 			{
 				if(m==0){ // if we performed only the first chunk , kmlio return without composing the final chunk
+					// free all computations structures
 					free(Y);
 					Y = NULL;
-					gettimeofday(&chunk_end, NULL);
-					kmlio_chunks_stats[m].chunk_real_delay = calc_delai_time(chunk_start, chunk_end);
+					free(cluster_assignment_final_Y);
+					cluster_assignment_final_Y = NULL;
+					free(marks);
+					marks = NULL;
+					
+					// KMLIO IS TERMINATED
 					return;
 				}
-				//else , we break and go the kmlio's next phase
+				//else , we STOP PROECESSING PARTIAL CHUNKS and go the kmlio's next phase
 				break;
 			}
 			else
@@ -1363,7 +1419,8 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 			////////////////////////////////////////////////////////////
 
 			m++;
-		}
+
+		}// PARTIAL CHUNKS CLUSTERING END
 
 		set_frequency(available_frequencies[nb_available_frequencies - 1]);
 
@@ -1409,16 +1466,12 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 			}
 		}
 
+		real_time.nb_group = nb_groupes ; //SVAEPOINT : GROUPS NUMBER
+
 		/****** PHASE 3 : FINAL CHUNK BUILDING ******/
-
-		// // printf("begin form chunk\n") ;
-
-		// gettimeofday(&chunk_start, NULL);
 
 		double *chunk;
 		chunk = form_chunk(groupes, source, marks, cluster_assignment_final, nb_groupes, N, dim, k, taille);
-
-		// // printf("end form chunk\n") ;
 
 		free(cluster_assignment_final);
 		cluster_assignment_final = NULL;
@@ -1441,10 +1494,6 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 		free(chunk);
 		chunk = NULL;
-
-		// gettimeofday(&chunk_end, NULL);
-		// kmlio_chunks_stats[chunk_ind].chunk_real_delay = calc_delai_time(chunk_start,chunk_end) ;
-		// kmlio_chunks_stats[chunk_ind].km_nb_iterations = kmeans_iterations ;
 	}
 	else
 	{
