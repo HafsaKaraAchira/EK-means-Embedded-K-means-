@@ -288,16 +288,16 @@ void decide_skip_chunk(size_t N, size_t M)
 	double estimated_curr_chunk_delay ;
 	skip_chunk_solution skip_chk_sols[(N / M) - chunk_ind] ;
 	double rem_time = calc_remaining_Time()  , partial_rem_time=0 ;
-	double T_alloc ;
+	double rem_chunk ;
 
-	while( ( partial_rem_time = rem_time - estimate_wcet_final_chunk(N,M,skp,freq) ) <= 0 && skp<(N/M) )
+	while( ( partial_rem_time = rem_time - estimate_wcet_final_chunk(N,M,skp,freq) ) <= 0 && skp<(N/M)-1 )
 		skp ++ ;
 
 	printf("rem time = %lf\n",partial_rem_time) ;
 
-	T_alloc = MAX( 0 , partial_rem_time / estimate_wcet_partial_chunk(M,freq) ) ;
+	rem_chunk = MAX( 0 , partial_rem_time / estimate_wcet_partial_chunk(M,freq) ) ;
 
-	skip_chunk = MIN( N/M - 1 , (N/M) - floor(T_alloc) ) ;
+	skip_chunk = MIN( N/M - 1 , MAX(0,(N/M) - floor(rem_chunk)) ) ;
 
 	// while (skp < (N / M) - chunk_ind)
 	// {

@@ -11,8 +11,8 @@ Dim <- 10 # dimension
 # c <- 134218   # cluster points number
 # sepvalue <- 0.4   # sep value
 
-for( c in c(1677725) ) {    # 134218,335545,,1677725,671090,1342180,,2013270,2684360
-    for( sepvalue in c(-6) ) {
+for( c in c(335545) ) {    # 134218,335545,,1677725,671090,1342180,,2013270,2684360
+    for( sepvalue in c(-8) ) {
         print(c)
         folder <- sprintf("generator/%sD/%sN/SEP%.1f/",Dim,c*K,sepvalue/10.0)       # SEP%.1f
         print(folder)

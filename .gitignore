@@ -3,4 +3,4 @@ points*.csv
 git-old
 .git-old
 generator/*/
-SKIP_CHUNKS/reports/*/
+SKIP_CHUNKS/reports/SEP*/*/result_clusters.csv
