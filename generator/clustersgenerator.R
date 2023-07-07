@@ -12,66 +12,66 @@ Dim <- 10 # dimension
 # c <- 134218   # cluster points number
 # sepvalue <- 0.4   # sep value
 
-for( c in c(1342180) ) {    # 134218,335545,,1677725,671090,1342180,,2013270,2684360
-    for( sepvalue in c(-6:5) ) {
+for( c in c(335545) ) {    # 134218,335545,,1677725,671090,1342180,,2013270,2684360
+    for( sepvalue in c(-6,-4) ) {
         print(c)
-        folder <- sprintf("generator/%sD/%sN/SEP%.1f/",Dim,c*10,sepvalue/10.0)       # SEP%.1f
+        folder <- sprintf("generator/%sD/%sN/SEP%.1f/",Dim,c*K,sepvalue/10.0)       # SEP%.1f
         print(folder)
 
         minmax_scaler <- function(x) {(x - min(x)) / (max(x) - min(x))}
 
         # #####################################################################################################
     
-        # tmp1 <- genRandomClust(
-        #                numClust = K ,
-        #                sepVal = sepvalue/10.0 ,
-        #                numNonNoisy = Dim ,
-        #                clustszind = 1 ,
-        #                clustSizeEq = c ,
-        #                numReplicate = 1 ,
-        #                fileName = paste(folder, "datapoints", sep = "")
-        #             )
+        tmp1 <- genRandomClust(
+                       numClust = K ,
+                       sepVal = sepvalue/10.0 ,
+                       numNonNoisy = Dim ,
+                       clustszind = 1 ,
+                       clustSizeEq = c ,
+                       numReplicate = 1 ,
+                       fileName = paste(folder, "datapoints", sep = "")
+                    )
 
-        # print("data generated done")
+        print("data generated done")
 
         print("data ALREADY generated done")
 
-        # #####################################################################################################
+        #####################################################################################################
 
-        # data <- read_delim(paste(folder, "datapoints_1.dat", sep = "")," ",col_names= TRUE)
-        # print("data read done")
+        data <- read_delim(paste(folder, "datapoints_1.dat", sep = "")," ",col_names= TRUE)
+        print("data read done")
 
-        # data_norm <- minmax_scaler(data)
-        # print("data norm done")
+        data_norm <- minmax_scaler(data)
+        print("data norm done")
 
-        # data_norm$cluster <- read_delim(paste(folder, "datapoints_1.mem", sep = "")," ",col_names= FALSE) - 1
-        # print("data clusters read done") 
+        data_norm$cluster <- read_delim(paste(folder, "datapoints_1.mem", sep = "")," ",col_names= FALSE) - 1
+        print("data clusters read done") 
 
-        # head(data_norm$cluster)
+        head(data_norm$cluster)
 
-        # # #################################
-        # # #################################
+        # #################################
+        # #################################
 
-        # data_min <- min(data)
-        # print(data_min)
-        # data_max <- max(data)
-        # print(data_max)
-        # write.table(c(data_min,data_max),paste(folder,"data_min_max.csv",sep=""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
+        data_min <- min(data)
+        print(data_min)
+        data_max <- max(data)
+        print(data_max)
+        write.table(c(data_min,data_max),paste(folder,"data_min_max.csv",sep=""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
         
-        # # #################################
-        # # #################################
+        # #################################
+        # #################################
 
-        # data_shuffle <- data_norm[sample(1:nrow(data_norm)), ]
-        # print("data shuffle done")
+        data_shuffle <- data_norm[sample(1:nrow(data_norm)), ]
+        print("data shuffle done")
 
-        # write_delim(data.frame(data_shuffle[,c(Dim+1)]),paste(folder, "real_classes.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
-        # print("data clusters write done")
+        write_delim(data.frame(data_shuffle[,c(Dim+1)]),paste(folder, "real_classes.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
+        print("data clusters write done")
      
-        # write_delim(data.frame(data_shuffle[,c(1:Dim)]),paste(folder, "points.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
-        # print("data norm write done")
+        write_delim(data.frame(data_shuffle[,c(1:Dim)]),paste(folder, "points.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
+        print("data norm write done")
 
-        # word <- readline(prompt="Enter a key (extract the mean vectors before): ")
-        # print(word)
+        word <- readline(prompt="Enter a key (extract the mean vectors before): ")
+        print(word)
 
         min_max <- read.table(paste(folder,"data_min_max.csv",sep=""),header = FALSE,sep = "\t",stringsAsFactors = FALSE)
 
