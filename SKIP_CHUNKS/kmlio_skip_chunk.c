@@ -293,7 +293,7 @@ void decide_skip_chunk(size_t N, size_t M)
 	while( ( partial_rem_time = rem_time - estimate_wcet_final_chunk(N,M,skp,freq) ) <= 0 && skp<(N/M)-1 )
 		skp ++ ;
 
-	printf("rem time = %lf\n",partial_rem_time) ;
+	printf("rem time = %lf, skp= %d \n",partial_rem_time,skp) ;
 
 	rem_chunk = MAX( 0 , partial_rem_time / estimate_wcet_partial_chunk(M,freq) ) ;
 
@@ -367,8 +367,17 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 			kmlio_chunks_stats[m].chunk_estimated_delay = estimate_wcet_final_chunk(N,taille,skip_chunk,kmlio_chunks_stats[m].freq) ;
 		
 		double chunk_delay_error = ( kmlio_chunks_stats[m].chunk_estimated_delay - kmlio_chunks_stats[m].chunk_real_delay ) / kmlio_chunks_stats[m].chunk_estimated_delay ;
-		// fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;\"skp\":%d;T_all_it\":%f;\"remaining_time\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_rem_checkpoint,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error,(m==(N/taille)?"":",")) ;
-		fprintf(fl,"\"chunk_%d\":(%d;%ld;%f;%f;%f;%f;%f;%f;%.4f)%s",
+		// fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;\"skp\":%d;\"T_all_it\":%f;\"remaining_time\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",m,kmlio_chunks_stats[m].km_nb_iterations,kmlio_chunks_stats[m].freq/1000000,T_all_iteration,kmlio_chunks_stats[m].chunk_rem_checkpoint,kmlio_chunks_stats[m].chunk_estimated_delay,kmlio_chunks_stats[m].chunk_real_delay,chunk_delay_error,(m==(N/taille)?"":",")) ;
+		// fprintf(fl,"\"chunk_%d\":(\"nb_it\":%d;\"freq\":%ld;\"T_all_it\":%f;\"sse_init\":%f;\"sse_final\":%f;\"remaining_time\":%f;\"estimated_delay\":%f;\"real_delay\":%f;\"delay_error\":%.4f)%s",
+		// log kmlio dataset properties : N, DIM , K , M , DMAX , TOTAL kmlio time
+		fprintf(fl,"%ld,%ld,%ld,%ld,%.3f,%d,%lf,",N,taille,dim,k,D_max,skip_chunk,calc_delai_time(kmlio_start,kmlio_end));
+		printf("dataset props saved \n") ;
+
+		// LOG PROBLEM CONSTANT :
+		fprintf(fl,"%d,%lf,%lf,%lf,%lf,%lf,{",real_time.nb_group,real_time.T_1_read,real_time.getmat_time,real_time.init_time,real_time.km_1_iteration_time,real_time.var_copy_time);
+		printf("dataset ctes saved \n") ;
+
+		fprintf(fl,",,%d,%d;%ld;%f;%f;%f;%f;%f;%f;%.4f\n",
 																m,
 																kmlio_chunks_stats[m].km_nb_iterations,
 																kmlio_chunks_stats[m].freq/1000000,
@@ -378,8 +387,8 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 																kmlio_chunks_stats[m].chunk_rem_checkpoint,
 																kmlio_chunks_stats[m].chunk_estimated_delay,
 																kmlio_chunks_stats[m].chunk_real_delay,
-																chunk_delay_error,
-																(m==(N/taille)?"":",")
+																chunk_delay_error
+																// (m==(N/taille)?"":",")
 															) ;
 	}
 	fprintf(fl,"}");

@@ -5,6 +5,22 @@ if(!require("clusterGeneration")) {
 
 library("readr")
 
+# Elevation / quantitative /meters / Elevation in meters
+# Aspect / quantitative / azimuth / Aspect in degrees azimuth
+# Slope / quantitative / degrees / Slope in degrees
+# Horizontal_Distance_To_Hydrology / quantitative / meters / Horz Dist to nearest surface water features
+# Vertical_Distance_To_Hydrology / quantitative / meters / Vert Dist to nearest surface water features
+# Horizontal_Distance_To_Roadways / quantitative / meters / Horz Dist to nearest roadway
+# Hillshade_9am / quantitative / 0 to 255 index / Hillshade index at 9am, summer solstice
+# Hillshade_Noon / quantitative / 0 to 255 index / Hillshade index at noon, summer soltice
+# Hillshade_3pm / quantitative / 0 to 255 index / Hillshade index at 3pm, summer solstice
+# Horizontal_Distance_To_Fire_Points / quantitative / meters / Horz Dist to nearest wildfire ignition points
+# Wilderness_Area (4 binary columns) / qualitative / 0 (absence) or 1 (presence) / Wilderness area designation
+# Soil_Type (40 binary columns) / qualitative / 0 (absence) or 1 (presence) / Soil Type designation
+# Cover_Type (7 types) / integer / 1 to 7 / Forest Cover Type designation
+
+"Elevation","Aspect","Slope","Horizontal_Distance_To_Hydrology","Vertical_Distance_To_Hydrology","Hillshade_9am","Hillshade_Noon","Hillshade_3pm","Horizontal_Distance_To_Fire_Points","Wilderness_Area_0","Wilderness_Area_1","Wilderness_Area_2","Wilderness_Area_3","Soil_Type_0","Soil_Type_1","Soil_Type_2","Soil_Type_3","Soil_Type_4","Soil_Type_5","Soil_Type_6","Soil_Type_7","Soil_Type_8","Soil_Type_9","Soil_Type_10","Soil_Type_11","Soil_Type_12","Soil_Type_13","Soil_Type_14","Soil_Type_15","Soil_Type_16","Soil_Type_17","Soil_Type_18","Soil_Type_19","Soil_Type_20","Soil_Type_21","Soil_Type_22","Soil_Type_23","Soil_Type_24","Soil_Type_25","Soil_Type_26","Soil_Type_27","Soil_Type_28","Soil_Type_29","Soil_Type_30","Soil_Type_31","Soil_Type_32","Soil_Type_33","Soil_Type_34","Soil_Type_35","Soil_Type_36","Soil_Type_37","Soil_Type_38","Soil_Type_39","Cover_Type"
+
 
 K <- 6 # clusters
 # Dim <- 561 # dimension
@@ -16,7 +32,9 @@ print(folder)
 
 minmax_scaler <- function(x) {(x - min(x)) / (max(x) - min(x))}
 
-X_file <- "/home/hafsa/Documents/Paper/covtype/covtype.data" #"/home/hafsa/Documents/Paper/HAR/X_train.txt"
+X_file <- "/home/hafsa/Documents/Paper/covtype/covtype.data"
+
+#"/home/hafsa/Documents/Paper/HAR/X_train.txt"
 # Y_file <- "/home/hafsa/Documents/Paper/HAR/y_train.txt"
 
 #####################################################################################################

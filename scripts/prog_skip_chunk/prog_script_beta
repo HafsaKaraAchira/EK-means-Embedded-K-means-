@@ -11,10 +11,10 @@ kmlio_wcet=750
 
 # scripts/prog_skip_chunk/prog_script_beta 10 6710900 10 140 5
 
-for sep in "0.0"
+for sep in "-0.2" "0.0" "0.2"
 do
     mkdir -p SKIP_CHUNKS/reports/SEP${sep}
-    for MC in 7 5 #4 2 # 33 dmax values
+    for MC in 5 #4 2 # 33 dmax values
     do 
         python3 ./scripts/prog_mem_script.py $N $MC $k $dim
         # scripts/prog_script_cgroup $MEM_SIZE
@@ -42,9 +42,9 @@ do
                 (
                     ./SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max
                 ) && 
-                # (
-                #     mv $old_loc_report $report
-                # ) &&
+                (
+                    mv $old_loc_report $report
+                ) &&
                 # ( ###################
                 #     gcc -g SKIP_CHUNKS/kmlio_eval.c -o SKIP_CHUNKS/kmlio_eval -lm -D _GNU_SOURCE
                 # ) && 
