@@ -29,7 +29,7 @@ def prog_memory_est(N,dim,k,MC) :
     dataset_assign_size = N * int_size
     
     size = chunk_size+dist_mat_size+kmeans_assign_size+chunk_assign_size+dataset_assign_size
-    size = math.ceil(( (size) / (1024**2)) + 1.5 ) +1
+    size = math.ceil( ( (size) / (1024**2) ) ) + 5
     
     return size
 

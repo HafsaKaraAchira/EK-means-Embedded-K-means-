@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+echo "SET CGROUP SETTINGS"
 echo $(($1 * 1024 * 1024)) > /sys/fs/cgroup/kmeans/memory.high
 cat /sys/fs/cgroup/kmeans/memory.high
 
@@ -8,11 +8,5 @@ cat /sys/fs/cgroup/kmeans/memory.high
 # sysctl vm.swappiness=5
 # echo 5 > /sys/fs/cgroup/memory/kmeans/memory.swappiness
 # cat /sys/fs/cgroup/memory/kmeans/memory.swappiness
-
-# mkdir -p /sys/fs/cgroup/blkio/kmeans
-# echo "8:0 $(($2 * 1024 * 1024))" > /sys/fs/cgroup/blkio/kmeans/blkio.throttle.read_bps_device
-# echo "8:0 $(($2 * 1024 * 1024))" > /sys/fs/cgroup/blkio/kmeans/blkio.throttle.write_bps_device
-# cat /sys/fs/cgroup/blkio/kmeans/blkio.throttle.read_bps_device
-# cat /sys/fs/cgroup/blkio/kmeans/blkio.throttle.write_bps_device
 
 # 

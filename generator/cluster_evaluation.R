@@ -35,11 +35,10 @@ M <- args[8]
 K <- args[9]
 DIM <- args[10]
 DMAX <- args[11]
-BETA <- args[12]
-EXP_ID <- args[13]
+EXP_ID <- args[12]
 
-report <- sprintf("SKIP_CHUNKS/reports/SEP%s/%sN_%sM_%sD_%sK_%sL_%sbeta_EXP%s/",SEP,N,M,DIM,K,DMAX,BETA,EXP_ID)
-folder <- "generator/real_dataset/covertype/" #sprintf("generator/%sD/%sN/SEP%s/",DIM,N,SEP) 
+report <- sprintf("SKIP_CHUNKS/reports/SEP%s/%sN_%sM_%sD_%sK_%sT_EXP%s/",SEP,N,M,DIM,K,DMAX,EXP_ID)
+folder <- sprintf("generator/%sD/%sN/SEP%s/",DIM,N,SEP) 
 
 
 ari_classes <- read.table(paste(folder,"real_classes.csv",sep=""),header = FALSE,sep = "\t",stringsAsFactors = FALSE,blank.lines.skip = TRUE,nrows = as.numeric(N))

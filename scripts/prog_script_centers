@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# 
+# scripts/prog_script_centers 10 13421800 10
 k=$1
 N=$2
 dim=$3
-# 
+# "0.5" "0.4" "0.3" "0.2" "0.1" "0.0" "-0.1" "-0.2" "-0.3" "-0.4" "-0.5" "-0.6" 
 
-for sep in  "0.2" "0.0" "-0.2" ; do
+for sep in "0.2" "0.0" "-0.2" ; do
     dataset_log="generator/${dim}D/${N}N/SEP${sep}/datapoints_1.log"
     echo $dataset_log
     dataset_real_centers="generator/${dim}D/${N}N/SEP${sep}/real_centers.csv"
     echo $dataset_real_centers
-    grep -i -A 1 --no-group-separator " mean vector " $dataset_log | grep -v " mean vector " | tail -n $k | sed 's/ /\t/g' | tee $dataset_real_centers
+    grep -i -A 1 --no-group-separator " mean vector " $dataset_log | grep -v " mean vector " | tail -n $k | sed 's/ /\t/g' | tee $dataset_real_centers 
 done

@@ -1,4 +1,7 @@
 #!/bin/bash
+
+echo -n -e "clearing cache ..."
 sudo sh -c "echo 3 > /proc/sys/vm/drop_caches" ;
 swapoff -a ; 
 swapon -a ;
+echo "cleared."

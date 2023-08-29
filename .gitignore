@@ -5,3 +5,5 @@ git-old
 generator/*/
 SKIP_CHUNKS/reports/*/*/result_clusters.csv
 SKIP_CHUNKS/reports/*/*/ARI_*
+SKIP_CHUNKS/reports/SEP*/*/result_clusters.csv
+SKIP_CHUNKS/reports/SEP*/
