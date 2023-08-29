@@ -23,7 +23,7 @@ do
         # scripts/prog_script_cgroup $MEM_SIZE
         for d_max in $kmlio_wcet           #$((kmlio_wcet/4)) $((kmlio_wcet/2)) $kmlio_wcet $((kmlio_wcet*5/4)) $((kmlio_wcet*6/4)) #{..3000..120}    # 10 dmax values
         do
-            for ((i=4;i<$nb_exp;i++)); 
+            for ((i=0;i<$nb_exp;i++)); 
             do
                 folder="generator/${dim}D/${N}N/SEP${sep}"
                 dataset="${folder}/points.csv"
