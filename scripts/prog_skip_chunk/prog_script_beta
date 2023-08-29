@@ -17,7 +17,7 @@ kmlio_wcet=360
 for sep in "0.0"
 do
     mkdir -p SKIP_CHUNKS/reports/SEP${sep}
-    for MC in 2 #10 8 5 4 2          # 33 dmax values
+    for MC in 10 8 5 4 2          # 33 dmax values
     do 
         python3 ./scripts/prog_mem_script.py $N $MC $k $dim
         # scripts/prog_script_cgroup $MEM_SIZE
@@ -40,7 +40,7 @@ do
                         scripts/prog_script_cache
                     ) && 
                     (
-                        gcc -g SKIP_CHUNKS/kmlio_skip_chunk_save.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
+                        gcc -g SKIP_CHUNKS/kmlio_skip_chunk_fmax.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
                     ) && 
                     (
                         cgexec -g cpuset,memory,io:kmeans taskset -c 4 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max
