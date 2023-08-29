@@ -102,11 +102,12 @@ struct timeval km_it_start, kmlio_start, kmlio_end;
 
 long set_speed;
 
+const int nb_available_frequencies = 16;
 
-const int nb_available_frequencies = 19 ;
+long MAX_FREQ = 2900000000, MIN_FREQ = 798000000, BASE_FREQ = 2294000000, FREQ_STEP = 100000000;
 
-long available_frequencies[] = {200000000,300000000,400000000,500000000,600000000,700000000,800000000,900000000,1000000000,1100000000,1200000000,1300000000,1400000000,1500000000,1600000000,1700000000,1800000000,1900000000,2000000000};	//{798000000,897000000,997000000,1097000000,1197000000,1297000000,1396000000,1496000000,1596000000,1696000000,1795000000,1895000000,1995000000,2095000000,2194000000,2294000000} ;
-
+long available_frequencies[] = {798000000, 897000000, 997000000, 1097000000, 1197000000, 1297000000, 1396000000, 1496000000, 1596000000, 1696000000, 1795000000, 1895000000, 1995000000, 2095000000, 2194000000, 2294000000};
+ 
 double *kmeans_iterations_durations;
 
 chunk_stats *kmlio_chunks_stats;
@@ -116,28 +117,25 @@ kmlio_time_estimation real_time;
 km_convergence_stat *chunk_convergence_stats ;
 
 
-/**************************************/
-/**************************************/
-/**************************************/
+
 
 
 void set_frequency(long freq)
 {
-	set_speed = freq ;
-	char *cmd ;
-	asprintf(&cmd, "cpufreq-set -c 4 -f %ld",(set_speed/1000)) ;
-	printf("%s\n",cmd);
-	system(cmd) ;
+	set_speed = freq;
+	// printf("set speed = %ld\n",set_speed) ;
+	char *cmd;
+	asprintf(&cmd, "echo %ld | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_setspeed", (set_speed / 1000));
+	system(cmd);
 
-	// free(cmd) ;
-	cmd = NULL ;
+	cmd = NULL;
 }
 
-void set_governor(char * gov)
+void set_governor(char *gov)
 {
-	char *cmd ;
-	asprintf(&cmd, "cpufreq-set -c 4 -g %s",gov) ;
-	system(cmd) ;
+	char *cmd;
+	asprintf(&cmd, "echo %s | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor", gov);
+	system(cmd);
 }
 
 double calc_delai_time(struct timeval tv_start, struct timeval tv_end)
@@ -276,6 +274,8 @@ void update_optimal_freq(size_t N, size_t M)
 		kmlio_chunks_stats[chunk_ind].freq = available_frequencies[min];
 	}
 
+	kmlio_chunks_stats[chunk_ind].freq = available_frequencies[nb_available_frequencies - 1] ;
+
 	// save the estimated chunk time with choosen frequency
 	// (*estimated_curr_chunk_delay) = (*estimated_curr_chunk_delay) / freq + curr_chunk_read_time;
 
@@ -344,7 +344,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 	printf("dataset props saved \n") ;
 
 	// LOG PROBLEM CONSTANT :
-	fprintf(fl,"%d,%lf,%lf,%lf,%lf,%lf,{",real_time.nb_group,real_time.T_1_read,real_time.getmat_time,real_time.init_time,real_time.km_1_iteration_time,real_time.var_copy_time);
+	fprintf(fl,"%d,%lf,%lf,%lf,%lf,%lf,{\n",real_time.nb_group,real_time.T_1_read,real_time.getmat_time,real_time.init_time,real_time.km_1_iteration_time,real_time.var_copy_time);
 
 	printf("dataset ctes saved \n") ;
 
@@ -1355,7 +1355,8 @@ double *form_chunk(groupe *grp, /*double *X*/ char *source, int *marks, int *clu
 	// kmlio_chunks_stats[chunk_ind].freq = freq;
 
 	update_optimal_freq(N, taille) ;
-	set_frequency(kmlio_chunks_stats[chunk_ind].freq) ;
+	// set_frequency(kmlio_chunks_stats[chunk_ind].freq) ;
+	set_frequency(available_frequencies[nb_available_frequencies - 1]) ;
 
 	size = 0;
 	// iterate over chunk points
@@ -1558,7 +1559,8 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 				update_optimal_freq(N, taille) ;
 				
-				set_frequency(kmlio_chunks_stats[chunk_ind].freq) ;
+				// set_frequency(kmlio_chunks_stats[chunk_ind].freq) ;
+				set_frequency(available_frequencies[nb_available_frequencies - 1]) ;
 			}
 
 			////////////////////////////////////////////////////////////
@@ -1684,7 +1686,6 @@ int main(int argc, char **argv)
 
 	char cmd[200];
 	sprintf(cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
-	sprintf (cmd, "echo %d > /sys/fs/cgroup/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
 	system(cmd);
 
 	sleep(1);
