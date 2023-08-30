@@ -1673,7 +1673,7 @@ int main(int argc, char **argv)
 	// clear cpu mask
 	CPU_ZERO(&set);
 	// set cpu 0
-	CPU_SET(0, &set);
+	CPU_SET(4, &set);
 	// 0 is the calling process
 	sched_setaffinity(0, sizeof(cpu_set_t), &set);
 	// set priority
