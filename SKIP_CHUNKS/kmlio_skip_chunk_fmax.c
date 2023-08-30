@@ -1661,6 +1661,11 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 	else
 	{	
 		set_frequency(available_frequencies[nb_available_frequencies - 1]) ;
+
+		kmeans_iterations_durations = calloc( (N / taille) , sizeof(double) );	//calloc(MAX_ITERATIONS * ((N / taille) + 1), sizeof(double));
+		kmlio_chunks_stats = calloc((N / taille), sizeof(chunk_stats));
+		chunk_convergence_stats = calloc(MAX_ITERATIONS * (N / taille), sizeof(km_convergence_stat));
+		
 		chunk_ind = 0 ;
 		kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = calc_remaining_Time() ;
 		gettimeofday(&chunk_start, NULL);
