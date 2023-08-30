@@ -866,6 +866,7 @@ double *getmatrix(char *source, size_t dim, size_t N, int sub, int offset, int *
 	size_t i = 0, j = 0;
 	int stop = 0;
 
+	printf("start malloc") ;
 	X = (double *)malloc(sizeof(double) * sub * dim);
 	fseek(src, marks[offset / sub], SEEK_CUR);
 	char delim[3] = "\t";
