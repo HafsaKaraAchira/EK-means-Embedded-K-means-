@@ -1669,7 +1669,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 		{
 			gettimeofday(&tv_1, NULL);
 			real_time.getmat_time = calc_delai_time(chunk_start, tv_1);
-			// printf("getmat\n") ;
+			printf("getmat\n") ;
 		}
 
 		(*cluster_centroid) = kmeans_init_plusplus(X, N, dim, k);
@@ -1678,7 +1678,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 			gettimeofday(&tv_2, NULL);
 			real_time.init_time = calc_delai_time(tv_1, tv_2);
 			real_time.km_1_iteration_time = 0;
-			// printf("init++\n") ;
+			printf("init++\n") ;
 		}
 
 		calc_cycles_per_elem(N,N) ;
