@@ -5,7 +5,7 @@ N=$1
 k=$2
 dim=$3
 nb_exp=$4
-kmlio_wcet=360
+kmlio_wcet=1500
 
 # 10 , 8 , 5 , 4 , 2
 
@@ -14,7 +14,7 @@ kmlio_wcet=360
 # "0.00" "0.15" "0.25" "0.30" "0.45" "0.50" "0.60" "0.75" "0.90" "1.00"
 # "0.00" "0.25" "0.50" "0.75" 
 
-for sep in "0.0"
+for sep in "0.2" "-0.2"
 do
     mkdir -p SKIP_CHUNKS/reports/SEP${sep}
     for MC in 1          # 33 dmax values
