@@ -17,7 +17,7 @@ kmlio_wcet=360
 for sep in "0.0"
 do
     mkdir -p SKIP_CHUNKS/reports/SEP${sep}
-    for MC in 10 7 5 2 1          # 33 dmax values
+    for MC in 1          # 33 dmax values
     do 
         python3 ./scripts/prog_mem_script.py $N $MC $k $dim
         # scripts/prog_script_cgroup $MEM_SIZE
