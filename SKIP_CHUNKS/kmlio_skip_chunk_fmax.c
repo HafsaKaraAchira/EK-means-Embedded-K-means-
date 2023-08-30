@@ -356,7 +356,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 	FILE * fp = fopen(log_file_name,"wt") ;
 
 	double T_all_iteration ;
-	for(int m = 0 ; m<(N/taille)+1;m++){
+	for(int m = 0 ; m<(N/taille)+((N/taille) > 1) ; m++){
 
 		for(int it=0;it<kmlio_chunks_stats[m].km_nb_iterations;it++){
 			fprintf(fp,"%d,%d,%u,%lf\n",m,it,chunk_convergence_stats[m*MAX_ITERATIONS+it].change_count,chunk_convergence_stats[m*MAX_ITERATIONS+it].sse);
@@ -1647,6 +1647,10 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 	}
 	else
 	{
+		chunk_ind = 0 ;
+		kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = calc_remaining_Time() ;
+		gettimeofday(&chunk_start, NULL);
+
 		double *X;
 
 		X = getmatrix_buf(source, dim, k, N, N, 0, marks);
@@ -1658,6 +1662,11 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 		free(X);
 		X = NULL;
+		
+		gettimeofday(&chunk_end, NULL);
+		//SAVEPOINT: save chunk real elapsed time
+		kmlio_chunks_stats[chunk_ind].chunk_real_delay = calc_delai_time(chunk_start, chunk_end);
+		kmlio_chunks_stats[chunk_ind].freq = available_frequencies[nb_available_frequencies - 1];
 	}
 
 	free(cluster_assignment_final_Y);
