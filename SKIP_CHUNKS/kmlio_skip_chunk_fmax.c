@@ -871,7 +871,7 @@ double *getmatrix(char *source, size_t dim, size_t N, int sub, int offset, int *
 	char delim[3] = "\t";
 	char *token;
 
-	printf('start gettime') ;
+	printf("start gettime") ;
 	j = 0;
 	while (!feof(src) && !stop)
 	{
@@ -889,7 +889,7 @@ double *getmatrix(char *source, size_t dim, size_t N, int sub, int offset, int *
 				stop = 1;
 	}
 	fclose(src);
-	printf('end gettime') ;
+	printf("end gettime") ;
 
 	return X;
 }
