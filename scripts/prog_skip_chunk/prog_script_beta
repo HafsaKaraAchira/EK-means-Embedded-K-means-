@@ -43,7 +43,7 @@ do
                         gcc -g SKIP_CHUNKS/kmlio_skip_chunk_fmax.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
                     ) && 
                     (
-                        cgexec -g cpuset,memory:kmeans taskset -c 4 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max
+                        cgexec -g cpuset,io,memory:kmeans taskset -c 4 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max
                     ) && 
                     (
                         mv $old_loc_report $report
