@@ -341,7 +341,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 	printf("log opened \n") ;
 
 	// log kmlio dataset properties : N, DIM , K , M , DMAX , TOTAL kmlio time
-	fprintf(fl,"%ld,%ld,%ld,%ld,%.3f,%d,%lf,",N,taille,dim,k,D_max,skip_chunk,calc_delai_time(kmlio_start,kmlio_end));
+	fprintf(fl,"%d,%d,%d,%d,%.3f,%d,%lf,",N,taille,dim,k,D_max,skip_chunk,calc_delai_time(kmlio_start,kmlio_end));
 
 	printf("dataset props saved \n") ;
 
@@ -1687,7 +1687,7 @@ int main(int argc, char **argv)
 	double *X;
 
 	char cmd[200];
-	sprintf(cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	// sprintf(cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
 	sprintf (cmd, "echo %d > /sys/fs/cgroup/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
 	system(cmd);
 
