@@ -191,13 +191,23 @@ double estimate_wcet_partial_chunk(size_t M, long freq)
 
 double estimate_wcet_final_chunk(size_t N, size_t M, int skip_chunk, long freq)
 {
-	return (estimate_T_get_matrix_time(M, freq) * ((N / M) - skip_chunk) + estimate_T_init_time(freq) + ((MAX_ITERATIONS + 1) * estimate_T_1_iteration_time(freq)));
+	if( (N/M) > 1 ){
+		return (estimate_T_get_matrix_time(M, freq) * ((N / M) - skip_chunk) + estimate_T_init_time(freq) + ((MAX_ITERATIONS + 1) * estimate_T_1_iteration_time(freq)));
+	}
+	else{
+		return ( (real_time.C_get_matrix_on_elem / freq)  + estimate_T_init_time(freq) + ((MAX_ITERATIONS + 1) * estimate_T_1_iteration_time(freq)) );
+	}
 }
 
 double calc_cycles_per_elem(size_t N, size_t M)
 {
 	real_time.T_1_read = real_time.mark_time / N ;
-	real_time.C_get_matrix_on_elem = (real_time.getmat_time - real_time.T_1_read * M) * set_speed ;
+	if( (N/M) > 1 ){
+		real_time.C_get_matrix_on_elem = (real_time.getmat_time - real_time.T_1_read * M) * set_speed ;
+	}else{
+		real_time.C_get_matrix_on_elem  = real_time.getmat_time * set_speed ;
+	}
+
 	real_time.C_init_elem = real_time.init_time * set_speed ;
 	real_time.C_1_it_elem = real_time.km_1_iteration_time * set_speed ;
 	real_time.C_var_copy = real_time.var_copy_time * set_speed ;
@@ -364,7 +374,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 
 		T_all_iteration = kmeans_iterations_durations[m];
 		
-		if(m<(N/taille)-skip_chunk)
+		if( m<(N/taille)-skip_chunk && (N/taille) > 1 )
 			kmlio_chunks_stats[m].chunk_estimated_delay = estimate_wcet_partial_chunk(taille,kmlio_chunks_stats[m].freq) ;
 		else
 			kmlio_chunks_stats[m].chunk_estimated_delay = estimate_wcet_final_chunk(N,taille,skip_chunk,kmlio_chunks_stats[m].freq) ;
@@ -1654,9 +1664,24 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 		double *X;
 
-		X = getmatrix_buf(source, dim, k, N, N, 0, marks);
+		X = getmatrix(source, dim, N, N, 0, marks);
+		if (chunk_ind == 0) //SAVEPOINT:
+		{
+			gettimeofday(&tv_1, NULL);
+			real_time.getmat_time = calc_delai_time(chunk_start, tv_1);
+			// printf("getmat\n") ;
+		}
 
 		(*cluster_centroid) = kmeans_init_plusplus(X, N, dim, k);
+		if (chunk_ind == 0)	 //SAVEPOINT:
+		{
+			gettimeofday(&tv_2, NULL);
+			real_time.init_time = calc_delai_time(tv_1, tv_2);
+			real_time.km_1_iteration_time = 0;
+			// printf("init++\n") ;
+		}
+
+		calc_cycles_per_elem(N,N) ;
 
 		cluster_assignment_final = (int *)malloc(N * sizeof(int));
 		kmeans(dim, X, N, N, k, (*cluster_centroid), cluster_assignment_final, &kmeans_iterations, &kmeans_change_count);
