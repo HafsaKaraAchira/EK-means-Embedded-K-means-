@@ -1666,13 +1666,14 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 		gettimeofday(&chunk_start, NULL);
 
 		double *X;
-
+		
+		printf("getmat start\n") ;
 		X = getmatrix(source, dim, N, N, 0, marks);
 		if (chunk_ind == 0) //SAVEPOINT:
 		{
 			gettimeofday(&tv_1, NULL);
 			real_time.getmat_time = calc_delai_time(chunk_start, tv_1);
-			printf("getmat\n") ;
+			printf("getmat end\n") ;
 		}
 
 		(*cluster_centroid) = kmeans_init_plusplus(X, N, dim, k);
