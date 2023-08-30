@@ -866,13 +866,13 @@ double *getmatrix(char *source, size_t dim, size_t N, int sub, int offset, int *
 	size_t i = 0, j = 0;
 	int stop = 0;
 
-	printf("start malloc") ;
+	// printf("start malloc") ;
 	X = (double *)malloc(sizeof(double) * sub * dim);
 	fseek(src, marks[offset / sub], SEEK_CUR);
 	char delim[3] = "\t";
 	char *token;
 
-	printf("start gettime") ;
+	// printf("start gettime") ;
 	j = 0;
 	while (!feof(src) && !stop)
 	{
@@ -890,7 +890,7 @@ double *getmatrix(char *source, size_t dim, size_t N, int sub, int offset, int *
 				stop = 1;
 	}
 	fclose(src);
-	printf("end gettime") ;
+	// printf("end gettime") ;
 
 	return X;
 }
@@ -1672,7 +1672,7 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 		double *X;
 		
-		printf("getmat start\n") ;
+		// printf("getmat start\n") ;
 		X = getmatrix(source, dim, N, N, 0, marks);
 		if (chunk_ind == 0) //SAVEPOINT:
 		{
