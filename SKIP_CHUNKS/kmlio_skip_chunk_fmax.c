@@ -1646,7 +1646,8 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 		chunk = NULL;
 	}
 	else
-	{
+	{	
+		set_frequency(available_frequencies[nb_available_frequencies - 1]) ;
 		chunk_ind = 0 ;
 		kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = calc_remaining_Time() ;
 		gettimeofday(&chunk_start, NULL);
