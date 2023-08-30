@@ -330,7 +330,7 @@ void decide_skip_chunk(size_t N, size_t M)
 
 void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double * centroid){
 	char*  dirname ;
-	asprintf(&dirname,"SKIP_CHUNKS/reports/%ldN_%ldM_%ldD_%ldK_%dT",N,taille,dim,k,(int)D_max) ;
+	asprintf(&dirname,"SKIP_CHUNKS/reports/%dN_%dM_%dD_%dK_%dT",N,taille,dim,k,(int)D_max) ;
 	int check = mkdir(dirname,0777) ;
 	sleep(5) ;
 
@@ -1688,7 +1688,7 @@ int main(int argc, char **argv)
 
 	char cmd[200];
 	// sprintf(cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
-	sprintf (cmd, "echo %d > /sys/fs/cgroup/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	// sprintf (cmd, "echo %d > /sys/fs/cgroup/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
 	system(cmd);
 
 	sleep(1);
