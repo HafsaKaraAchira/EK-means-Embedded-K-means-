@@ -403,7 +403,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 		// 														// (m==(N/taille)?"":",")
 		// 													) ;
 
-		fprintf(fl,"\t\t\t\t%d,%d;%ld;%f;%f;%f;%f;%.4f\n",
+		fprintf(fl,"(%d,%d;%ld;%f;%f;%f;%f;%.4f)%s",
 														m,
 														kmlio_chunks_stats[m].km_nb_iterations,
 														kmlio_chunks_stats[m].freq/1000000,
@@ -411,8 +411,8 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 														kmlio_chunks_stats[m].chunk_rem_checkpoint,
 														kmlio_chunks_stats[m].chunk_estimated_delay,
 														kmlio_chunks_stats[m].chunk_real_delay,
-														chunk_delay_error
-														// (m==(N/taille)?"":",")
+														chunk_delay_error,
+														(m==(N/taille)?"":",")
 													) ;															
 	}
 	fprintf(fl,"}");
@@ -1713,13 +1713,13 @@ void kmeans_by_chunk(char *source, size_t dim, int taille, int N, int k, double 
 
 int main(int argc, char **argv)
 {
-	cpu_set_t set;
-	// clear cpu mask
-	CPU_ZERO(&set);
-	// set cpu 0
-	CPU_SET(4, &set);
-	// 0 is the calling process
-	sched_setaffinity(0, sizeof(cpu_set_t), &set);
+	// cpu_set_t set;
+	// // clear cpu mask
+	// CPU_ZERO(&set);
+	// // set cpu 0
+	// CPU_SET(4, &set);
+	// // 0 is the calling process
+	// sched_setaffinity(0, sizeof(cpu_set_t), &set);
 	// set priority
 	setpriority(PRIO_PROCESS, 0, -20);
 
@@ -1732,7 +1732,7 @@ int main(int argc, char **argv)
 
 	char cmd[200];
 	// sprintf(cmd, "echo %d > /sys/fs/cgroup/memory/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
-	sprintf (cmd, "echo %d > /sys/fs/cgroup/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
+	// sprintf (cmd, "echo %d > /sys/fs/cgroup/kmeans/cgroup.procs", getpid()); // /cgroups/mem/kmeans/tasks
 	system(cmd);
 
 	sleep(1);
