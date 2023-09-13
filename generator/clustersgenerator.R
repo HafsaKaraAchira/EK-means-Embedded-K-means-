@@ -19,56 +19,56 @@ for( c in c(1342180) ) {    # 134218,335545,,1677725,671090,1342180,,2013270,268
 
         minmax_scaler <- function(x) {(x - min(x)) / (max(x) - min(x))}
 
-        #####################################################################################################
+        ####################################################################################################
     
-        # tmp1 <- genRandomClust(
-        #                numClust = K,
-        #                sepVal = sepvalue/10.0 ,
-        #                numNonNoisy = Dim,
-        #                clustszind = 1,
-        #                clustSizeEq = c, 
-        #                numReplicate = 1,
-        #                fileName = paste(folder, "datapoints", sep = "")
-        #             )
+        tmp1 <- genRandomClust(
+                       numClust = K,
+                       sepVal = sepvalue/10.0 ,
+                       numNonNoisy = Dim,
+                       clustszind = 1,
+                       clustSizeEq = c, 
+                       numReplicate = 1,
+                       fileName = paste(folder, "datapoints", sep = "")
+                    )
 
-        # print("data generated done")
+        print("data generated done")
 
-        # #####################################################################################################
+        #####################################################################################################
 
-        # data <- read_delim(paste(folder, "datapoints_1.dat", sep = "")," ",col_names= TRUE)
-        # print("data read done")
+        data <- read_delim(paste(folder, "datapoints_1.dat", sep = "")," ",col_names= TRUE)
+        print("data read done")
 
-        # data_norm <- minmax_scaler(data)
-        # print("data norm done")
+        data_norm <- minmax_scaler(data)
+        print("data norm done")
 
-        # data_norm$cluster <- read_delim(paste(folder, "datapoints_1.mem", sep = "")," ",col_names= FALSE) - 1
-        # print("data clusters read done") 
+        data_norm$cluster <- read_delim(paste(folder, "datapoints_1.mem", sep = "")," ",col_names= FALSE) - 1
+        print("data clusters read done") 
 
-        # head(data_norm$cluster)
+        head(data_norm$cluster)
 
-        # data_shuffle <- data_norm[sample(1:nrow(data_norm)), ]
-        # print("data shuffle done")
+        data_shuffle <- data_norm[sample(1:nrow(data_norm)), ]
+        print("data shuffle done")
 
-        # write_delim(data.frame(data_shuffle[,c(Dim+1)]),paste(folder, "real_classes.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
-        # print("data clusters write done")
+        write_delim(data.frame(data_shuffle[,c(Dim+1)]),paste(folder, "real_classes.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
+        print("data clusters write done")
      
-        # write_delim(data.frame(data_shuffle[,c(1:Dim)]),paste(folder, "points.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
-        # print("data norm write done")
+        write_delim(data.frame(data_shuffle[,c(1:Dim)]),paste(folder, "points.csv", sep = ""),quote = "none",col_names=FALSE,delim = "\t")
+        print("data norm write done")
 
-        #################################
-        #################################
+        ################################
+        ################################
 
-        # data_min <- min(data)
-        # print(data_min)
-        # data_max <- max(data)
-        # print(data_max)
-        # write.table(c(data_min,data_max),paste(folder,"data_min_max.csv",sep=""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
+        data_min <- min(data)
+        print(data_min)
+        data_max <- max(data)
+        print(data_max)
+        write.table(c(data_min,data_max),paste(folder,"data_min_max.csv",sep=""),quote = FALSE,col.names=FALSE,row.names=FALSE, sep = "\t")
 
-        #################################
-        #################################
+        ################################
+        ################################
 
-        # # word <- readline(prompt="Enter a key (extract the mean vectors before): ")
-        # # print(word)
+        # word <- readline(prompt="Enter a key (extract the mean vectors before): ")
+        # print(word)
 
         
 

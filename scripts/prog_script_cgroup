@@ -4,6 +4,12 @@ echo "SET CGROUP SETTINGS"
 echo $(($1 * 1024 * 1024)) > /sys/fs/cgroup/kmeans/memory.high
 cat /sys/fs/cgroup/kmeans/memory.high
 
+
+
+
+
+
+
 # mkdir -p /sys/fs/cgroup/memory/kmeans
 # sysctl vm.swappiness=5
 # echo 5 > /sys/fs/cgroup/memory/kmeans/memory.swappiness

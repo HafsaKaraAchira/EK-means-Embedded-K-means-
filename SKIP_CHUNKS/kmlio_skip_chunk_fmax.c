@@ -48,6 +48,21 @@ scripts/prog_skip_chunk/prog_script_beta 10 3355450 10 75 5
 #define BIG_double (INFINITY)
 
 void r8mat_write(char *output_filename, int m, int n, double table[]) ;
+struct km_convergence_stat
+{
+	double sse ;
+	unsigned int change_count ;
+};
+typedef struct km_convergence_stat km_convergence_stat ;
+km_convergence_stat *chunk_convergence_stats ;
+
+struct skip_chunk_solution
+{
+	double skip_chunk;
+	double freq;
+	double estimated_curr_chunk_delay;
+};
+typedef struct skip_chunk_solution skip_chunk_solution;
 
 struct kmlio_time_estimation
 {
@@ -68,14 +83,6 @@ struct kmlio_time_estimation
 };
 typedef struct kmlio_time_estimation kmlio_time_estimation;
 
-struct skip_chunk_solution
-{
-	double skip_chunk;
-	double freq;
-	double estimated_curr_chunk_delay;
-};
-typedef struct skip_chunk_solution skip_chunk_solution;
-
 struct chunk_stats
 {
 	double chunk_estimated_delay;
@@ -87,40 +94,21 @@ struct chunk_stats
 };
 typedef struct chunk_stats chunk_stats;
 
-struct km_convergence_stat
-{
-	double sse ;
-	unsigned int change_count ;
-};
-typedef struct km_convergence_stat km_convergence_stat ;
-
 int D_max;
 int chunk_ind = 0;
 int skip_chunk = 0;
-
 struct timeval km_it_start, kmlio_start, kmlio_end;
 
 long set_speed;
-
-
 const int nb_available_frequencies = 19 ;
-
 long available_frequencies[] = {200000000,300000000,400000000,500000000,600000000,700000000,800000000,900000000,1000000000,1100000000,1200000000,1300000000,1400000000,1500000000,1600000000,1700000000,1800000000,1900000000,2000000000};	//{798000000,897000000,997000000,1097000000,1197000000,1297000000,1396000000,1496000000,1596000000,1696000000,1795000000,1895000000,1995000000,2095000000,2194000000,2294000000} ;
-
 double *kmeans_iterations_durations;
-
 chunk_stats *kmlio_chunks_stats;
-
 kmlio_time_estimation real_time;
 
-km_convergence_stat *chunk_convergence_stats ;
-
-
-/**************************************/
-/**************************************/
 /**************************************/
 
-
+// system calls to cpufreq utility
 void set_frequency(long freq)
 {
 	set_speed = freq ;
@@ -140,6 +128,7 @@ void set_governor(char * gov)
 	system(cmd) ;
 }
 
+// time calculate functions
 double calc_delai_time(struct timeval tv_start, struct timeval tv_end)
 {
 	return ((double)(tv_end.tv_usec - tv_start.tv_usec) / 1000000 + (double)(tv_end.tv_sec - tv_start.tv_sec));
@@ -164,6 +153,7 @@ double calc_remaining_Time()
 	return (D_max - calc_kmlio_past_time());
 }
 
+//estimate each phase time
 double estimate_T_get_matrix_time(size_t M, long freq)
 {
 	return (real_time.T_1_read * M + real_time.C_get_matrix_on_elem / freq);
@@ -184,11 +174,13 @@ double estimate_T_var_copy_time(long freq)
 	return (real_time.C_var_copy / freq);
 }
 
+//estimate partial chunk wcet
 double estimate_wcet_partial_chunk(size_t M, long freq)
 {
 	return ( estimate_T_get_matrix_time(M, freq) + estimate_T_init_time(freq) + ((MAX_ITERATIONS + 1) * estimate_T_1_iteration_time(freq)) + estimate_T_var_copy_time(freq) );
 }
 
+//estimate final chunk wcet
 double estimate_wcet_final_chunk(size_t N, size_t M, int skip_chunk, long freq)
 {
 	if( (N/M) > 1 ){
@@ -199,6 +191,7 @@ double estimate_wcet_final_chunk(size_t N, size_t M, int skip_chunk, long freq)
 	}
 }
 
+//deduce number of cycles for each phase
 double calc_cycles_per_elem(size_t N, size_t M)
 {
 	real_time.T_1_read = real_time.mark_time / N ;
@@ -212,7 +205,6 @@ double calc_cycles_per_elem(size_t N, size_t M)
 	real_time.C_1_it_elem = real_time.km_1_iteration_time * set_speed ;
 	real_time.C_var_copy = real_time.var_copy_time * set_speed ;
 }
-
 
 // a local function to return the optimal frequency before processing each chunk
 void update_optimal_freq(size_t N, size_t M)
@@ -295,6 +287,7 @@ void update_optimal_freq(size_t N, size_t M)
 	// return freq;
 }
 
+// decide the number of chunks to drop after the 1st chunk processing
 void decide_skip_chunk(size_t N, size_t M)
 {
 	long freq = available_frequencies[nb_available_frequencies - 1] ;
@@ -337,7 +330,7 @@ void decide_skip_chunk(size_t N, size_t M)
 	// kmlio_chunks_stats[chunk_ind].chunk_rem_checkpoint = rem_time;
 }
 
-
+//log k-mlio stats
 void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double * centroid){
 	char*  dirname ;
 	asprintf(&dirname,"SKIP_CHUNKS/reports/%dN_%dM_%dD_%dK_%dT",N,taille,dim,k,(int)D_max) ;
@@ -426,6 +419,9 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 
 	printf("results centers saved \n") ;
 }
+
+
+
 
 
 void r8mat_write(char *output_filename, int m, int n, double table[])

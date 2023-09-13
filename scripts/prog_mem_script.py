@@ -4,17 +4,10 @@ import os
 import math
 import sys
 
-
-
-
 N = int(sys.argv[1])
 MC = int(sys.argv[2])
 k = int(sys.argv[3])
 dim = int(sys.argv[4])
-
-
-
-
 
 def chunk_memory_est(N,dim,MC) :
     double_size = 8
@@ -22,7 +15,6 @@ def chunk_memory_est(N,dim,MC) :
     chunk_size = M * dim * double_size
     
     return ( (chunk_size) / (1024**2) )
-
 
 def prog_memory_est(N,dim,k,MC) :
     double_size = 8
@@ -39,18 +31,10 @@ def prog_memory_est(N,dim,k,MC) :
     
     return size
 
-
-
-
 #################################################################
-#################################################################
-#################################################################
-
 
 S=prog_memory_est(N,dim,k,MC)
 os.system("scripts/prog_script_cgroup " + str(int(S)))
 print("N/M="+str(MC)+"      CHUNK_SIZE="+str(chunk_memory_est(N,dim,MC))+"    MEM_SIZE="+str(int(S)))
 
-
-#################################################################
 #################################################################
