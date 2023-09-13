@@ -326,9 +326,10 @@ void decide_skip_chunk(size_t N, size_t M)
 }
 
 
+//log k-mlio stats
 void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double * centroid){
 	char*  dirname ;
-	asprintf(&dirname,"SKIP_CHUNKS/reports/%ldN_%ldM_%ldD_%ldK_%dT",N,taille,dim,k,(int)D_max) ;
+	asprintf(&dirname,"SKIP_CHUNKS/reports/%dN_%dM_%dD_%dK_%dT",N,taille,dim,k,(int)D_max) ;
 	int check = mkdir(dirname,0777) ;
 	sleep(5) ;
 
@@ -339,7 +340,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 	printf("log opened \n") ;
 
 	// log kmlio dataset properties : N, DIM , K , M , DMAX , TOTAL kmlio time
-	fprintf(fl,"%ld,%ld,%ld,%ld,%.3f,%d,%lf,",N,taille,dim,k,D_max,skip_chunk,calc_delai_time(kmlio_start,kmlio_end));
+	fprintf(fl,"%d,%d,%d,%d,%.3f,%d,%lf,",N,taille,dim,k,D_max,skip_chunk,calc_delai_time(kmlio_start,kmlio_end));
 
 	printf("dataset props saved \n") ;
 
@@ -354,7 +355,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 	FILE * fp = fopen(log_file_name,"wt") ;
 
 	double T_all_iteration ;
-	for(int m = 0 ; m<(N/taille)+1;m++){
+	for(int m = 0 ; m<(N/taille)+((N/taille) > 1) ; m++){
 
 		for(int it=0;it<kmlio_chunks_stats[m].km_nb_iterations;it++){
 			fprintf(fp,"%d,%d,%u,%lf\n",m,it,chunk_convergence_stats[m*MAX_ITERATIONS+it].change_count,chunk_convergence_stats[m*MAX_ITERATIONS+it].sse);
@@ -362,7 +363,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 
 		T_all_iteration = kmeans_iterations_durations[m];
 		
-		if(m<(N/taille)-skip_chunk)
+		if( m<(N/taille)-skip_chunk && (N/taille) > 1 )
 			kmlio_chunks_stats[m].chunk_estimated_delay = estimate_wcet_partial_chunk(taille,kmlio_chunks_stats[m].freq) ;
 		else
 			kmlio_chunks_stats[m].chunk_estimated_delay = estimate_wcet_final_chunk(N,taille,skip_chunk,kmlio_chunks_stats[m].freq) ;
@@ -391,7 +392,7 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 		// 														// (m==(N/taille)?"":",")
 		// 													) ;
 
-		fprintf(fl,"\t\t\t\t%d,%d;%ld;%f;%f;%f;%f;%.4f\n",
+		fprintf(fl,"(%d,%d;%ld;%f;%f;%f;%f;%.4f)%s",
 														m,
 														kmlio_chunks_stats[m].km_nb_iterations,
 														kmlio_chunks_stats[m].freq/1000000,
@@ -399,8 +400,8 @@ void kmlio_diag(size_t k,size_t dim, size_t N, size_t taille,double D_max,double
 														kmlio_chunks_stats[m].chunk_rem_checkpoint,
 														kmlio_chunks_stats[m].chunk_estimated_delay,
 														kmlio_chunks_stats[m].chunk_real_delay,
-														chunk_delay_error
-														// (m==(N/taille)?"":",")
+														chunk_delay_error,
+														(m==(N/taille)?"":",")
 													) ;															
 	}
 	fprintf(fl,"}");
