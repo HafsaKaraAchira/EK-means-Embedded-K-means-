@@ -5,7 +5,7 @@ N=$1
 k=$2
 dim=$3
 nb_exp=$4
-kmlio_wcet=1250
+kmlio_wcet=600
 
 # 10 , 8 , 5 , 4 , 2
 
@@ -35,7 +35,7 @@ do
                     scripts/prog_script_cache
                 ) && 
                 (
-                    gcc -g SKIP_CHUNKS/kmlio_skip_chunk_fmax.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
+                    gcc -g SKIP_CHUNKS/kmlio_skip_chunk.c -o SKIP_CHUNKS/kmlio_skip_chunk -lm -D _GNU_SOURCE
                 ) && 
                 (
                     cgexec -g cpuset,io,memory:kmeans taskset -c 4 SKIP_CHUNKS/kmlio_skip_chunk $dataset $k $N $M $dim $d_max
