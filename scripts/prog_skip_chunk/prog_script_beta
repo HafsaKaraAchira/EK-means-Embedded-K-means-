@@ -5,7 +5,7 @@ N=$1
 k=$2
 dim=$3
 nb_exp=$4
-kmlio_wcet=1050
+kmlio_wcet=1250
 
 # 10 , 8 , 5 , 4 , 2
 
