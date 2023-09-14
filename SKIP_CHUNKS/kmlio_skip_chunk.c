@@ -278,7 +278,7 @@ void update_optimal_freq(size_t N, size_t M)
 		kmlio_chunks_stats[chunk_ind].freq = available_frequencies[min];
 	}
 	
-	kmlio_chunks_stats[chunk_ind].freq = available_frequencies[nb_available_frequencies - 1] ;
+	// kmlio_chunks_stats[chunk_ind].freq = available_frequencies[nb_available_frequencies - 1] ;
 
 	// save the estimated chunk time with choosen frequency
 	// (*estimated_curr_chunk_delay) = (*estimated_curr_chunk_delay) / freq + curr_chunk_read_time;
